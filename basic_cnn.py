@@ -90,15 +90,15 @@ class CNN(nn.Module):
         output = self.out(x)
         return output, x    # return x for visualization
 cnn = CNN()
-print( cnn )
+#print( cnn )
 
 #define the "cross entropy" loss function
 loss_func = nn.CrossEntropyLoss()
-print(loss_func)
+#print(loss_func)
 
 # take the betas from our CNN class
 optimizer = optim.Adam(cnn.parameters(), lr = 0.01)
-print(optimizer)
+#print(optimizer)
 
 num_epochs = 10
 def train(num_epochs, cnn, loaders):
@@ -130,8 +130,7 @@ def train(num_epochs, cnn, loaders):
                        .format(epoch + 1, num_epochs, i + 1, total_step, loss.item()))
             pass
         
-        pass
-    
+        pass  
     
     pass
 train(num_epochs, cnn, loaders)
