@@ -17,7 +17,6 @@ BATCH_SIZE = 100
 
 # Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-print(device)
 train_data = datasets.MNIST(
     root = 'data',
     train = True,                         
@@ -51,65 +50,49 @@ class CNN(nn.Module):
         #the base class get the "son" name and the module
         super(CNN, self).__init__()
         #define the first convolution
-        # img size= (28*28)->1 padding ->(30*30)->conv kernal 3->(28*28)
-        #Cin=1, Cout=4
-        self.conv1_1 = nn.Sequential(         
+        # img size= (28*28)->1 padding ->(30*30)->conv kernal 3->(28*28)->
+        # max pooling kernal 2->(14*14)
+        #Cin=1, Cout=32
+        self.conv1 = nn.Sequential(         
             #add convolution
             nn.Conv2d(
                 in_channels=1,              
-                out_channels=4,            
+                out_channels=32,            
                 kernel_size=3,              
                 stride=1,                   
                 padding=1,                  
             ),              
             #wrap the convolution with relu                
-            nn.ReLU(),                         
+            nn.ReLU(), 
+
+            nn.MaxPool2d(kernel_size = 2, stride = 2),                        
         )
-        # img size= (28*28)->1 padding ->(30*30)->conv kernal 3->(28*28)->
-        # max pooling kernal 2->(14*14)
-        #Cin=4, Cout=16
-        self.conv1_2 = nn.Sequential(         
-            #add convolution
-            nn.Conv2d(
-                in_channels=4,              
-                out_channels=16,            
-                kernel_size=3,              
-                stride=1,                   
-                padding=1,                  
-            ),              
-            #wrap the convolution with relu                
-            nn.ReLU(),                     
-            #wrap the relu with max pooling 
-            nn.MaxPool2d(kernel_size=2),    
-        )
-        #define the second convolution
-        # img size= (14*14)->1 padding ->(16*16)->conv kernal 3->(14*14)
-        #Cin=16, Cout=16
-        self.conv2_1 = nn.Sequential(         
-            nn.Conv2d(16, 16, 3, 1, 1),     
-            nn.ReLU(),                 
-        )
+        
         #define the second convolution
         # img size= (14*14)->1 padding ->(16*16)->conv kernal 3->(14*14)->
         # max pooling kernal 2->(7*7)
-        #Cin=16, Cout=32
-        self.conv2_2 = nn.Sequential(         
-            nn.Conv2d(16, 32, 3, 1, 1),     
-            nn.ReLU(),                      
-            nn.MaxPool2d(2),                
+        #Cin=32, Cout=64
+        self.conv2 = nn.Sequential(         
+            nn.Conv2d(32, 64, 3, 1, 1),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size = 2, stride = 2),
         )
+
+        self.relu = nn.ReLU()
         # fully connected layer
-        #img size (7*7)-> flatten the img->(1568*1)
-        #  Cin 32 , output 10 classes
-        self.out = nn.Linear(32 * 7 * 7, 10)
+        #img size (7*7)-> flatten the img->(3134*1)
+        #  Cin 64 , output (128*1) classes
+        self.linear1 = nn.Linear(64 * 7 * 7, 128)
+        #  in (128*1) , output (10*1) classes
+        self.out = nn.Linear(128, 10)
     #combine all the "blocks" 
     def forward(self, x):
-        x = self.conv1_1(x)
-        x = self.conv1_2(x)
-        x = self.conv2_1(x)
-        x = self.conv2_2(x)
+        x = self.conv1(x)
+        x = self.conv2(x)
         # flatten the output of conv2 to (batch_size, 32 * 7 * 7=1568)
-        x = x.view(x.size(0), -1)       
+        x = x.view(x.size(0), -1) 
+        x=self.linear1(x)
+        x=self.relu(x)
         output = self.out(x)
         return output, x    # return x for visualization
 cnn = CNN()
