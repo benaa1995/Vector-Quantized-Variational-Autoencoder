@@ -1,9 +1,9 @@
-                                                              Final Project
+                                                        Final Project
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+# –-----–---- Vector Quantized Variational Autoencoder –---–-----–
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-                                               Vector Quantized Variational Autoencoder 
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
- Task 1:
+### Task 1
 
 learn basic pytorch by inplement CNN on MNIST
 1. first we copy and learn pyturch code from https://medium.com/@nutanbhogendrasharma/pytorch-convolutional-neural-network-with-mnist-dataset-4e8a4265e118
@@ -14,4 +14,4 @@ learn basic pytorch by inplement CNN on MNIST
 and we implement it on the previos code and get success of 100% of the test group
 ![1_3DUs-90altOgaBcVJ9LTGg](https://user-images.githubusercontent.com/58992981/203141001-85860bfd-d0c5-4aaa-bca1-15c8d57c19a2.png)
 -------------
- Task 2:
+### Task 2
