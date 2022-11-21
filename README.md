@@ -13,4 +13,5 @@ learn basic pytorch by inplement CNN on MNIST
  https://towardsdatascience.com/mnist-handwritten-digits-classification-using-a-convolutional-neural-network-cnn-af5fafbc35e9
 and we implement it on the previos code and get success of 100% of the test group
 ![1_3DUs-90altOgaBcVJ9LTGg](https://user-images.githubusercontent.com/58992981/203141001-85860bfd-d0c5-4aaa-bca1-15c8d57c19a2.png)
-
+-------------
+ Task 2:
