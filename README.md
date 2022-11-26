@@ -17,4 +17,7 @@ and we implement it on the previos code and get success of 100% of the test grou
 ### Task 2
 
 * Implementing an Autoencoder in PyTorch
-first we copy and learn pyturch code from[ https://medium.com/@nutanbhogendrasharma/pytorch-convolutional-neural-network-with-mnist-dataset-4e8a4265e118](https://medium.com/pytorch/implementing-an-autoencoder-in-pytorch-19baa22647d1)](https://medium.com/pytorch/implementing-an-autoencoder-in-pytorch-19baa22647d1)
+1. first we copy and learn pyturch code from https://medium.com/pytorch/implementing-an-autoencoder-in-pytorch-19baa22647d1
+
+The encoder and the decoder are neural networks that build the autoencoder model, as depicted in the following figure:
+![0_b5eT77a_idC3v3BP](https://user-images.githubusercontent.com/58992981/204101096-358d987a-acb8-405c-8591-bed35dba85b7.jpg)
