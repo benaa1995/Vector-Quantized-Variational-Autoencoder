@@ -21,3 +21,8 @@ and we implement it on the previos code and get success of 100% of the test grou
 
 The encoder and the decoder are neural networks that build the autoencoder model, as depicted in the following figure:
 ![0_b5eT77a_idC3v3BP](https://user-images.githubusercontent.com/58992981/204101096-358d987a-acb8-405c-8591-bed35dba85b7.jpg)
+
+The autoencoder model was trained for 20 epochs, and the following figure plots the original (top) and reconstructed (bottom) MNIST images:
+![1_7tnQAd-dSQM-A3KhHBXH1w](https://user-images.githubusercontent.com/58992981/204101201-2f718865-b477-44de-b1a2-43f2e1d017e7.jpg)
+
+
