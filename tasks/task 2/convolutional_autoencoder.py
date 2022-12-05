@@ -249,44 +249,6 @@ def create_img( decoder, n):
                 ax.get_yaxis().set_visible(False)    
         plt.show()
     
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 num_epochs = 30
 diz_loss = {'train_loss':[],'val_loss':[]}
 for epoch in range(num_epochs):
