@@ -213,7 +213,78 @@ def plot_ae_outputs(encoder,decoder,n=10):
       ax.get_yaxis().set_visible(False)  
       if i == n//2:
          ax.set_title('Reconstructed images')
-    plt.show()   
+    plt.show() 
+
+### creat image from random latent vectors
+def create_img( decoder, n):
+    # Set evaluation mode for the decoder
+    decoder.eval()
+    random_latent_vectors = []
+    with torch.no_grad(): # No need to track the gradients 
+        plt.title("Sports Watch Data")
+        for i in range(n*n):
+            ax = plt.subplot(n,n,i+1)
+            random_latent_vec  = torch.tensor(np.random.rand(1,4), dtype=torch.float)
+            img = decoder(random_latent_vec)
+            random_latent_vectors.append(random_latent_vec)
+            plt.imshow(img.cpu().squeeze().numpy(), cmap='gist_gray')
+            ax.get_xaxis().set_visible(False)
+            ax.get_yaxis().set_visible(False)  
+        plt.show()
+        for i in range(2*n*n):
+            if i%2 == 0:
+                ax = plt.subplot(2*n,n,i+1)
+                img = decoder(random_latent_vectors[i//2])
+                plt.imshow(img.cpu().squeeze().numpy(), cmap='gist_gray')
+                ax.get_xaxis().set_visible(False)
+                ax.get_yaxis().set_visible(False)
+            else:
+                ax = plt.subplot(2*n,n,i+1)
+                changed = random_latent_vectors[i//2]
+                changed[0][0] = -0.5
+                #print(random_latent_vectors[i//2])
+                img=decoder(changed)
+                plt.imshow(img.cpu().squeeze().numpy(), cmap='gist_gray')
+                ax.get_xaxis().set_visible(False)
+                ax.get_yaxis().set_visible(False)    
+        plt.show()
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 num_epochs = 30
@@ -222,6 +293,7 @@ for epoch in range(num_epochs):
    train_loss =train_epoch(encoder,decoder,device,
    train_loader,loss_fn,optim)
    val_loss = test_epoch(encoder,decoder,device,test_loader,loss_fn)
+   create_img(decoder,n=4)
    print('\n EPOCH {}/{} \t train loss {} \t val loss {}'.format(epoch + 1, num_epochs,train_loss,val_loss))
    diz_loss['train_loss'].append(train_loss)
    diz_loss['val_loss'].append(val_loss)
