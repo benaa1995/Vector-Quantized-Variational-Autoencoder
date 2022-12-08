@@ -12,6 +12,8 @@ from torch.utils.data import DataLoader,random_split
 from torch import nn
 import torch.nn.functional as F
 import torch.optim as optim
+from torch.utils.tensorboard import SummaryWriter
+writer = SummaryWriter(f'runs/MNIST/autoencoder_tensorboard')
 
 data_dir = 'dataset'
 
@@ -30,6 +32,7 @@ train_dataset.transform = train_transform
 test_dataset.transform = test_transform
 
 m=len(train_dataset)
+print("len(train_dataset)= ",m,"len(test_dataset)",len(test_dataset))
 
 train_data, val_data = random_split(train_dataset, [int(m-m*0.2), int(m*0.2)])
 batch_size=256
@@ -105,38 +108,6 @@ class Decoder(nn.Module):
         return x
 
 
-
-### Define the loss function
-loss_fn = torch.nn.MSELoss()
-
-### Define an optimizer (both for the encoder and the decoder!)
-lr= 0.001
-
-### Set the random seed for reproducible results
-torch.manual_seed(0)
-
-### Initialize the two networks
-d = 4
-
-#model = Autoencoder(encoded_space_dim=encoded_space_dim)
-encoder = Encoder(encoded_space_dim=d,fc2_input_dim=128)
-decoder = Decoder(encoded_space_dim=d,fc2_input_dim=128)
-params_to_optimize = [
-    {'params': encoder.parameters()},
-    {'params': decoder.parameters()}
-]
-
-optim = torch.optim.Adam(params_to_optimize, lr=lr, weight_decay=1e-05)
-
-# Check if the GPU is available
-device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-print(f'Selected device: {device}')
-
-# Move both the encoder and the decoder to the selected device
-encoder.to(device)
-decoder.to(device)
-
-
 ### Training function
 def train_epoch(encoder, decoder, device, dataloader, loss_fn, optimizer):
     # Set train mode for both the encoder and the decoder
@@ -162,8 +133,6 @@ def train_epoch(encoder, decoder, device, dataloader, loss_fn, optimizer):
         train_loss.append(loss.detach().cpu().numpy())
 
     return np.mean(train_loss)
-
-
 
 ### Testing function
 def test_epoch(encoder, decoder, device, dataloader, loss_fn):
@@ -192,6 +161,7 @@ def test_epoch(encoder, decoder, device, dataloader, loss_fn):
     return val_loss.data
 
 def plot_ae_outputs(encoder,decoder,n=10):
+    device=torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     plt.figure(figsize=(16,4.5))
     targets = test_dataset.targets.numpy()
     t_idx = {i:np.where(targets==i)[0][0] for i in range(n)}
@@ -215,7 +185,7 @@ def plot_ae_outputs(encoder,decoder,n=10):
          ax.set_title('Reconstructed images')
     plt.show() 
 
-### creat image from random latent vectors
+### task one and two creat image from random latent vectors
 def create_img( decoder, n):
     # Set evaluation mode for the decoder
     decoder.eval()
@@ -231,32 +201,112 @@ def create_img( decoder, n):
             ax.get_xaxis().set_visible(False)
             ax.get_yaxis().set_visible(False)  
         plt.show()
+
+
         for i in range(2*n*n):
+            #original image
             if i%2 == 0:
                 ax = plt.subplot(2*n,n,i+1)
+                #plot the original image
                 img = decoder(random_latent_vectors[i//2])
                 plt.imshow(img.cpu().squeeze().numpy(), cmap='gist_gray')
                 ax.get_xaxis().set_visible(False)
                 ax.get_yaxis().set_visible(False)
+            #changed image
             else:
                 ax = plt.subplot(2*n,n,i+1)
+                #take the vector from the original vector list
                 changed = random_latent_vectors[i//2]
+                #change the latent vector
                 changed[0][0] = -0.5
-                #print(random_latent_vectors[i//2])
+                #plot the changed image
                 img=decoder(changed)
                 plt.imshow(img.cpu().squeeze().numpy(), cmap='gist_gray')
                 ax.get_xaxis().set_visible(False)
                 ax.get_yaxis().set_visible(False)    
         plt.show()
+
+
+
+def train_model(lr = 0.001, latent_size = 4 ):
+
+    ### Define the loss function
+    loss_fn = torch.nn.MSELoss()
+
+    ### Define an optimizer (both for the encoder and the decoder!)
+    #lr= 0.001
+    print("lr = ", lr)
+    ### Set the random seed for reproducible results
+    torch.manual_seed(0)
+
+    ### Initialize the two networks
+    #latent_size = 4
+    print("latent_size = ", latent_size)
+    #model = Autoencoder(encoded_space_dim=encoded_space_dim)
+    encoder = Encoder(encoded_space_dim=latent_size,fc2_input_dim=128)
+    decoder = Decoder(encoded_space_dim=latent_size,fc2_input_dim=128)
+    params_to_optimize = [
+        {'params': encoder.parameters()},
+        {'params': decoder.parameters()}
+    ]
+
+    optim = torch.optim.Adam(params_to_optimize, lr=lr, weight_decay=1e-05)
     
-num_epochs = 30
-diz_loss = {'train_loss':[],'val_loss':[]}
-for epoch in range(num_epochs):
-   train_loss =train_epoch(encoder,decoder,device,
-   train_loader,loss_fn,optim)
-   val_loss = test_epoch(encoder,decoder,device,test_loader,loss_fn)
-   create_img(decoder,n=4)
-   print('\n EPOCH {}/{} \t train loss {} \t val loss {}'.format(epoch + 1, num_epochs,train_loss,val_loss))
-   diz_loss['train_loss'].append(train_loss)
-   diz_loss['val_loss'].append(val_loss)
-   plot_ae_outputs(encoder,decoder,n=10)
+    # Check if the GPU is available
+    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+    print(f'Selected device: {device}')
+
+    # Move both the encoder and the decoder to the selected device
+    encoder.to(device)
+    decoder.to(device)
+
+
+
+
+    #tensorBoard hiper-paramters
+    global_step = 0
+    num_epochs = 30
+    
+    diz_loss = {'train_loss':[],'val_loss':[]}
+    for epoch in range(num_epochs):
+       train_loss =train_epoch(encoder,decoder,device,
+       train_loader,loss_fn,optim)
+       val_loss = test_epoch(encoder,decoder,device,test_loader,loss_fn)
+       #create_img(decoder,n=4)
+       print('\n EPOCH {}/{} \t train loss {} \t val loss {}'.format(epoch + 1, num_epochs,train_loss,val_loss))
+       diz_loss['train_loss'].append(train_loss)
+       diz_loss['val_loss'].append(val_loss)
+       writer.add_scalars("loss",{'Traning loss': train_loss,'Test loss':val_loss}, global_step)
+       writer.flush()
+       global_step +=1
+       if epoch%10 == 0:
+        plot_ae_outputs(encoder,decoder,n=10)
+
+
+def latent_size_stat():
+    NUM_OF_EPOCH = 30
+    STEP_SIZE = 0.25
+    NUM_OF_STEPS = 0
+    MAX_POW = 0
+
+    #compare the loss between the train vs test to avoid ovver fitting
+    #creat dict of requier col
+    #req_col={'epoch':[],'train_loss':[],'test_loss':[]}
+    data = {'Age': [35, 24, 21, 10], 'Name': ['Dana', 'Bina', 'Chana', 'Leah']}
+    #creat the cvs colons
+    req_col = {'Latent vector size':[2,4,8,16,32]}
+    epoch = "Epoch"
+    for i in range(NUM_OF_EPOCH):
+        temp_col = epoch+" "+str(i+1)
+        req_col[temp_col] = [1,1,1,1,1]
+    req_col["Best epoch"] = [1,1,1,1,1]
+    req_col["Best loss"] = [1.1,1.1,1.1,1.1,1.1]
+    
+    df = pd.DataFrame.from_dict(req_col)
+    print(df)
+    for latent_size in range(MAX_POW):
+        for step in range(NUM_OF_STEPS):
+            print()
+        
+
+train_model()
