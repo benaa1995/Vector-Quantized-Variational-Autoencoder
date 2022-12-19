@@ -25,5 +25,5 @@ The encoder and the decoder are neural networks that build the autoencoder model
 
 The autoencoder model was trained for 20 epochs, and the following figure plots the original (top) and reconstructed (bottom) MNIST images:
 ![1_7tnQAd-dSQM-A3KhHBXH1w](https://user-images.githubusercontent.com/58992981/204101201-2f718865-b477-44de-b1a2-43f2e1d017e7.jpg)
-
-
+-------------
+### Task 3
