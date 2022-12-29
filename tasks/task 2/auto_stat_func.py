@@ -62,15 +62,17 @@ def create_random_img(decoder, num_of_image=10, latent_size=4):
 """
     test_function does change every digit from latent vector in range of [-1,1] to check the image influetion from encoder.
 
-    :param encoder: the decoder after the train proccess 
-    :param decoder: describe about parameter p2
+    :param encoder: the encoder after the train proccess 
+    :param decoder: the decoder after the train proccess 
+    :param decoder: the test dataset 
     :param num_of_image: the number of image to create
     :param latent_size: the latent size of the autoencoder 
     :param num_of_steps: the number of steps of every  digit in range of [-1,1]
     :param device: the torch device 
     :return: none
     """ 
-def latent_digit_impact(encoder, decoder, num_of_image=8, latent_size=4, num_of_steps=8,
+def latent_digit_impact(encoder, decoder,test_dataset, num_of_image=8, latent_size=4, num_of_steps=8,
+
                         device=torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")):
     origin_image_list = []
     image_vec_list = []
@@ -104,10 +106,14 @@ def latent_digit_impact(encoder, decoder, num_of_image=8, latent_size=4, num_of_
                         plt.imshow(origin_image_list[img_index].cpu().squeeze().numpy(), cmap='gist_gray')
                         plt.title(f"Original image")
                         # decoder on the original latent vector
+                        ax.get_xaxis().set_visible(False)
+                        ax.get_yaxis().set_visible(False)
                         ax = plt.subplot(latent_size, num_of_image + 3, cordinate * (num_of_steps + 3) + 2)
                         plt.imshow(decoder(image_vec_list[img_index]).cpu().squeeze().numpy(), cmap='gist_gray')
                         plt.title(f"Original vector")
                     # add to the converted image to the plot
+                        ax.get_xaxis().set_visible(False)
+                        ax.get_yaxis().set_visible(False)
                     ax = plt.subplot(latent_size, num_of_image + 3, cordinate * (num_of_steps + 3) + step + 3)
                     plt.imshow(changed_image.cpu().squeeze().numpy(), cmap='gist_gray')
                     plt.title(f"cord: {cordinate}. value: {-1 + step * (2 / num_of_steps)}")
