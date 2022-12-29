@@ -180,3 +180,123 @@ def convert_img_from_latent(encoder, decoder,test_dataset,num_of_image=10, laten
                 ax.get_xaxis().set_visible(False)
                 ax.get_yaxis().set_visible(False)
             plt.show()           
+
+
+
+# save the latent vector in cvs and train liniar logistic on this model
+def convert_latent_to_cvs(encoder, latent_size, file_name, dataloader, dataset, device):
+    req_col = {}
+    X = "X"
+    for i in range(latent_size):
+        temp_col = X + str(i + 1)
+        req_col[temp_col] = []
+    req_col["Y"] = []
+
+    # convert to data frae
+    df = pd.DataFrame.from_dict(req_col)
+    print(df)
+    encoder.eval()
+    with torch.no_grad():  # No need to track the gradients
+        # get the label
+        y = dataset.targets
+        y = y.cpu().detach().numpy()
+        print(len(y))
+        print(dataloader)
+        print(len(dataloader))
+        for image_batch, _ in dataloader:
+            # Move tensor to the proper device
+            image_batch = image_batch.to(device)
+            curr_batch_size = image_batch.shape
+            curr_num_of_row = curr_batch_size[0]
+            # Encode data
+            encoded_data = encoder(image_batch)
+            bach_y = y[0:curr_num_of_row]
+            y = y[curr_num_of_row:]
+            encoded_data = encoded_data.cpu().detach().numpy()
+            rows = np.zeros((curr_num_of_row, latent_size + 1))
+            rows[:, :-1] = encoded_data
+            bach_y = bach_y.reshape((-1, 1))
+            rows[:, -1:] = bach_y
+            # add the row to the data frame
+            for row in rows:
+                df.loc[len(df)] = row
+        print(df)
+        file_name = file_name + '.cvs'
+        # save the dataframe as cvs file
+        df.to_csv(file_name)
+
+
+def train_with_log_reg(test_path, train_path):
+    # load the data
+    # df_train = pd.read_csv(train_path)
+    df_test = pd.read_csv(test_path)
+    df_train = pd.read_csv(train_path)
+    x_test = df_test.to_numpy()
+    x_test = x_test[:, 1:-1]
+    y_test = df_test['Y'].values
+    x_train = df_train.to_numpy()
+    x_train = x_train[:, 1:-1]
+    y_train = df_train['Y'].values
+
+    # sklrn linear regration
+    # two calasses
+    clf_1 = LogisticRegression(max_iter=1000)
+    clf_1.fit(x_train, y_train)
+    pred_y_train = clf_1.predict(x_train)
+    pred_y_test = clf_1.predict(x_test)
+    accuracy_test = 0
+    accuracy_train = 0
+    for i in range(len(y_train)):
+        if pred_y_train[i] == y_train[i]:
+            accuracy_train += 1
+    for i in range(len(y_test)):
+        if pred_y_test[i] == y_test[i]:
+            accuracy_test += 1
+    print("accuracy on train = ", accuracy_train, "/", len(y_train))
+    print("accuracy on test = ", accuracy_test, "/", len(y_test))
+
+def latent_size_stat():
+    NUM_OF_EPOCH = 100
+    STEP_SIZE = 0.25
+    NUM_OF_STEPS = 8
+    MAX_POW = 7
+
+    ###compare the loss between the train vs test to avoid over fitting
+    # creat the cvs colons
+    req_col = {'Latent vector size': []}
+    epoch = "Epoch"
+    for i in range(NUM_OF_EPOCH):
+        temp_col = epoch + " " + str(i + 1)
+        req_col[temp_col] = []
+    req_col["Best epoch"] = []
+    req_col["Best loss"] = []
+    # convert to data frae
+    df = pd.DataFrame.from_dict(req_col)
+    # print(df)
+    # get the train and test loss for every "2 pow" latent size
+    for pow in range(MAX_POW):
+        lat_size = int(np.power(2, pow + 1))
+        test_loss, train_loss = train_model(latent_size=lat_size, num_epochs=NUM_OF_EPOCH)
+
+        # add the test loss to data frame
+        row = test_loss
+        for i in range(len(row)):
+            row[i] = row[i].item()
+        row.insert(0, int(lat_size))
+        for i in range(2):
+            row.append(None)
+        # print("new row = ",row)
+        df.loc[len(df)] = row
+        print(df)
+
+    # find the nim test loss and his epooch and add them to the dataframe
+    for i in df.index:
+        temp = df.iloc[[i], 1: NUM_OF_EPOCH + 1].values
+        print(temp)
+        index = np.argmin(temp[0])
+        df.iloc[[i], [NUM_OF_EPOCH + 1]] = index + 1
+        df.iloc[[i], [NUM_OF_EPOCH + 2]] = temp[0][index]
+        print("epoch = ", index + 1, ", min = ", temp[0][index])
+    print(df)
+    # save the dataframe as cvs file
+    df.to_csv('statistic of latent size and epoch.csv')
