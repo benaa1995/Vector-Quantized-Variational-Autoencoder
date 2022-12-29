@@ -266,6 +266,54 @@ def latent_digit_impact(encoder, decoder, n=8, latent_size=4, num_of_steps=8,
             plt.show()
 
 
+# The function two image and convert one imag to the second by margin the two latent vector
+# with different impact
+def convert_img_from_latent(encoder, decoder, n=10, latent_size=4, num_of_steps=8,
+                            device=torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")):
+    origin_image_list = []
+    image_vec_list = []
+    print("convert_img_from_latent device = ", device)
+    encoder.eval()
+    decoder.eval()
+    # plo image size
+    plt.figure(figsize=(16, 4.5))
+    # get the image
+    targets = test_dataset.targets.numpy()
+    t_idx = {i: np.where(targets == i)[0][0] for i in range(n)}
+    with torch.no_grad():
+        # save the requested original image and the latent vector
+        for i in range(n):
+            origin_image_list.append(test_dataset[t_idx[i]][0].unsqueeze(0).to(device))
+            image_vec_list.append(encoder(origin_image_list[i]))
+        # create the converted image
+        for img_index in range(len(image_vec_list) // 2):
+            temp_first_vec = image_vec_list[img_index].detach().clone()
+            temp_second_vec = image_vec_list[-img_index - 1].detach().clone()
+            # ax = plt.subplot(latent_size, n + 1, 12)
+            # plt.imshow(origin_image_list[img_index].cpu().squeeze().numpy(), cmap='gist_gray')
+            # ax.get_xaxis().set_visible(False)
+            # ax.get_yaxis().set_visible(False)
+            #
+            # ax = plt.subplot(latent_size, n + 1, 13)
+            # plt.imshow(origin_image_list[-img_index - 1].cpu().squeeze().numpy(), cmap='gist_gray')
+            # ax.get_xaxis().set_visible(False)
+            # ax.get_yaxis().set_visible(False)
+
+            for step in range(num_of_steps + 1):
+                t = (1 / num_of_steps) * step
+                # combine the two image with impact "t" on the first ant "t-1" on the second
+                temp_vec = temp_first_vec * (1 - t) + temp_second_vec * (t)
+
+                # creat the change image by pass the vector throw the decoder
+                changed_image = decoder(temp_vec)
+                # add to the converted image to the plot
+                ax = plt.subplot(1, n + 1, step + 1)
+                plt.imshow(changed_image.cpu().squeeze().numpy(), cmap='gist_gray')
+                ax.get_xaxis().set_visible(False)
+                ax.get_yaxis().set_visible(False)
+            plt.show()
+
+
 # save the latent vector in cvs and train liniar logistic on this model
 def convert_latent_to_cvs(encoder, latent_size, file_name, dataloader, dataset, device):
     req_col = {}
@@ -371,7 +419,7 @@ def train_model(lr=0.001, latent_size=4, num_epochs=30):
     encoder.to(device)
     decoder.to(device)
 
-    # tensorBoard hiper-paramters
+    # tensorBoard hyper-parameters
     global_step = 1
     # num_epochs = 30
     diz_loss = {'train_loss': [], 'val_loss': []}
@@ -390,20 +438,23 @@ def train_model(lr=0.001, latent_size=4, num_epochs=30):
         plot_ae_outputs(encoder,decoder,n=10,device)'''
     writer.add_scalar("latent size vs minimun loss", min(diz_loss["val_loss"]), latent_size)
     writer.flush()
+    plot_ae_outputs(encoder, decoder, n=10, device=device)
     # create_img(decoder,n=4)
     create_random_img(decoder, 10, latent_size)
-    convert_latent_to_cvs(encoder, latent_size, 'test_let_4', test_loader, test_dataset,device)
-    convert_latent_to_cvs(encoder, latent_size, 'train_let_4', train_loader, train_dataset, device)
-    latent_digit_impact(encoder, decoder, n=8, latent_size=4, num_of_steps=8, device=device)
-
+    #test_file_name = 'test_lat_size_' + str(latent_size)
+    # convert_latent_to_cvs(encoder, latent_size, test_file_name, test_loader, test_dataset, device)
+    # train_file_name = 'train_lat_size_' + str(latent_size)
+    # convert_latent_to_cvs(encoder, latent_size, train_file_name, train_loader, train_dataset, device)
+    # latent_digit_impact(encoder, decoder, n=8, latent_size=4, num_of_steps=8, device=device)
+    convert_img_from_latent(encoder, decoder, n=10, latent_size=latent_size, num_of_steps=8, device=device)
     return diz_loss["val_loss"], diz_loss['train_loss']
 
 
 def latent_size_stat():
-    NUM_OF_EPOCH = 2
+    NUM_OF_EPOCH = 100
     STEP_SIZE = 0.25
-    NUM_OF_STEPS = 0
-    MAX_POW = 5
+    NUM_OF_STEPS = 8
+    MAX_POW = 7
 
     ###compare the loss between the train vs test to avoid over fitting
     # creat the cvs colons
@@ -446,6 +497,7 @@ def latent_size_stat():
     df.to_csv('statistic of latent size and epoch.csv')
 
 
+train_model(latent_size = 16,num_epochs=100)
 # latent_size_stat()
 #train_model(num_epochs=5)
-train_with_log_reg('test_let_4.cvs', 'train_let_4.cvs')
+# train_with_log_reg('test_let_4.cvs', 'train_let_4.cvs')
