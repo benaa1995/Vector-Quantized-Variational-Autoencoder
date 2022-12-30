@@ -126,7 +126,10 @@ def latent_digit_impact(encoder, decoder,test_dataset, num_of_image=8, latent_si
  # The function two image and convert one imag to the second by margin the two latent vector
  # with different impact
 """
-    convert_img_from_latent 
+    convert_img_from_latent  Takes two images convert them to latent vector by using the decoder.
+    and convert them from the first image to the second by taking the latent vector of each image
+    and for each step creating a new vector composed of "p" percent of the first image and "1-p" precent 
+    of the second image. And then pass the vector in the encoder and print the image
     :param encoder: the encoder after the train proccess 
     :param decoder: the decoder after the train proccess 
     :param test_dataset: the test dataset
@@ -184,6 +187,17 @@ def convert_img_from_latent(encoder, decoder,test_dataset,num_of_image=10, laten
 
 
 # save the latent vector in cvs and train liniar logistic on this model
+"""
+    convert_latent_to_cvs convert the "X" of the dataset to latent vector usin the given decoder. 
+    then save all the latent vector as "X" and tag them all like as same as the original tag
+    :param encoder: the encoder after the train proccess 
+    :param latent_size: the latent size of the autoencoder 
+    :param file_name:
+    :param dataloader:
+    :param test_dataset: the test dataset
+    :param device: the torch device 
+    :return: none
+    """ 
 def convert_latent_to_cvs(encoder, latent_size, file_name, dataloader, dataset, device):
     req_col = {}
     X = "X"
@@ -225,7 +239,13 @@ def convert_latent_to_cvs(encoder, latent_size, file_name, dataloader, dataset, 
         # save the dataframe as cvs file
         df.to_csv(file_name)
 
-
+"""
+    train_with_log_reg train lgistic regration on the "train_path" and print the accuracy on the train dataset
+    and the test dataset
+    :param test_path: the path of the test dataset, the data The should be in cvs format
+    :param train_path: the path of the train dataset, the data The should be in cvs format
+    :return: none
+    """ 
 def train_with_log_reg(test_path, train_path):
     # load the data
     # df_train = pd.read_csv(train_path)
@@ -255,10 +275,21 @@ def train_with_log_reg(test_path, train_path):
     print("accuracy on train = ", accuracy_train, "/", len(y_train))
     print("accuracy on test = ", accuracy_test, "/", len(y_test))
 
-def latent_size_stat():
+
+
+"""
+    latent_size_stat call the train function on the model, for every power of 2 between 0 to "MAX_POW" latent size.
+    and for every "2 power" save the test loss of every epoch between 1 to  NUM_OF_EPOCH in cvs file.\
+    :param train_model: the model to check statistic on
+    :param target_file: the target file path
+    :param num_of_epoch: the number of epoch
+    :param max_pow: the maximum power of 2 latent size to check the model on 
+
+    :return: cvs file of the statistic
+    """ 
+def latent_size_stat(train_model, target_file='statistic of latent size and epoch.csv',
+             num_of_epoch=100, max_pow=7):
     NUM_OF_EPOCH = 100
-    STEP_SIZE = 0.25
-    NUM_OF_STEPS = 8
     MAX_POW = 7
 
     ###compare the loss between the train vs test to avoid over fitting
@@ -272,7 +303,6 @@ def latent_size_stat():
     req_col["Best loss"] = []
     # convert to data frae
     df = pd.DataFrame.from_dict(req_col)
-    # print(df)
     # get the train and test loss for every "2 pow" latent size
     for pow in range(MAX_POW):
         lat_size = int(np.power(2, pow + 1))
@@ -285,11 +315,10 @@ def latent_size_stat():
         row.insert(0, int(lat_size))
         for i in range(2):
             row.append(None)
-        # print("new row = ",row)
         df.loc[len(df)] = row
         print(df)
 
-    # find the nim test loss and his epooch and add them to the dataframe
+    # find the minimum test loss and his epooch and add them to the dataframe
     for i in df.index:
         temp = df.iloc[[i], 1: NUM_OF_EPOCH + 1].values
         print(temp)
