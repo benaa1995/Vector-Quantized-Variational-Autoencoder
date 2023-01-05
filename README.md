@@ -55,6 +55,9 @@ The encoder and the decoder are neural networks that build the autoencoder model
 So that you can see how changing each of the coordinates affects the image,
 For example Latent SIZE is 16 and Number is 2
 
+<img width="947" alt="Screenshot 2023-01-05 at 20 49 55" src="https://user-images.githubusercontent.com/58992981/210859926-48a3e8e7-2ffc-454c-bef3-8df73001f6f2.png">
 
+8. We have converted an image to another image, Let's take an example when Latent SIZE is 64 and conversion from 2 to 7 :
 
-   
+<img width="815" alt="Screenshot 2023-01-05 at 20 58 36" src="https://user-images.githubusercontent.com/58992981/210860172-45af5d79-d23c-4f70-9fa3-85356ed55de2.png">
+
