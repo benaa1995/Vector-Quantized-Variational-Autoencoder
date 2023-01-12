@@ -69,14 +69,24 @@ class Encoder(nn.Module):
         self.encoder_lin = nn.Sequential(
             nn.Linear(3 * 3 * 32, 128),
             nn.ReLU(True),
-            nn.Linear(128, encoded_space_dim)
+            
         )
+        self.std_lin_output =  nn.Linear(128, encoded_space_dim)
+        self.mu_lin_output =  nn.Linear(128, encoded_space_dim)
 
     def forward(self, x):
         x = self.encoder_cnn(x)
         x = self.flatten(x)
         x = self.encoder_lin(x)
-        return x
+        log_var = std_lin_output(x)
+        mu = mu_lin_output(x)
+        return log_var, mu 
+    
+    def reparameterize(self, mu, log_var):
+        std = torch.exp(log_var /2)
+        eps = torch.rand_like(std)
+        
+        return mu + eps* std
 
 
 class Decoder(nn.Module):
@@ -114,6 +124,7 @@ class Decoder(nn.Module):
         return x
 
 
+
 ### Training function
 def train_epoch(encoder, decoder, device, dataloader, loss_fn, optimizer):
     # Set train mode for both the encoder and the decoder
@@ -125,11 +136,12 @@ def train_epoch(encoder, decoder, device, dataloader, loss_fn, optimizer):
         # Move tensor to the proper device
         image_batch = image_batch.to(device)
         # Encode data
-        encoded_data = encoder(image_batch)
+        mu,log_var = encoder(image_batch)
+        z = reparameterize(mu, log_var)
         # Decode data
-        decoded_data = decoder(encoded_data)
+        decoded_data = decoder(z)
         # Evaluate loss
-        loss = loss_fn(decoded_data, image_batch)
+        loss = loss_fn(mu, log_var, decoded_data, image_batch)
         # Backward pass
         optimizer.zero_grad()
         loss.backward()
@@ -154,17 +166,22 @@ def test_epoch(encoder, decoder, device, dataloader, loss_fn):
             # Move tensor to the proper device
             image_batch = image_batch.to(device)
             # Encode data
-            encoded_data = encoder(image_batch)
+            mu,log_var = encoder(image_batch)
+            z = reparameterize(mu, log_var)
             # Decode data
-            decoded_data = decoder(encoded_data)
+            decoded_data = decoder(z)
             # Append the network output and the original image to the lists
             conc_out.append(decoded_data.cpu())
             conc_label.append(image_batch.cpu())
+            conc_mu.append(mu.cpu())
+            log_var.append(log_var.cpu())
         # Create a single tensor with all the values in the lists
         conc_out = torch.cat(conc_out)
         conc_label = torch.cat(conc_label)
+        conc_mu = torch.cat(conc_mu)
+        log_var = torch.cat(log_var)
         # Evaluate global loss
-        val_loss = loss_fn(conc_out, conc_label)
+        val_loss = loss_fn(conc_mu, conc_mu, conc_out, conc_label)
     return val_loss.data
 
 
@@ -423,11 +440,15 @@ def train_with_TSNE(test_path, train_path):
     # print("accuracy on train = ", 100*accuracy_train/len(y_train), "%" )
     # print("accuracy on test = ", 100*accuracy_test/ len(y_test), "%")
 
+def kl_loss(log_var, mu, decoded_data, image_batch):
+    kl_divergence = 0.5 * torch.sum(-1 - log_var + mu.pow(2) + log_var.exp())
+    loss = F.binary_cross_entropy(decoded_data, image_batch, size_average=False) + kl_divergence
+    return loss
 
 
 def train_model(lr=0.001, latent_size=4, num_epochs=30):
     ### Define the loss function
-    loss_fn = torch.nn.MSELoss()
+    loss_fn = kl_loss
 
     ### Define an optimizer (both for the encoder and the decoder!)
     # lr= 0.001
@@ -537,11 +558,11 @@ def latent_size_stat():
 
 # train_model(latent_size = 16,num_epochs=100)
 # latent_size_stat()
-#train_model(num_epochs=5)
-train_with_TSNE('test_lat_size_2.cvs', 'train_lat_size_2.cvs')
-train_with_TSNE('test_lat_size_4.cvs', 'train_lat_size_4.cvs')
-train_with_TSNE('test_lat_size_8.cvs', 'train_lat_size_8.cvs')
-train_with_TSNE('test_lat_size_16.cvs', 'train_lat_size_16.cvs')
-train_with_TSNE('test_lat_size_32.cvs', 'train_lat_size_32.cvs')
-train_with_TSNE('test_lat_size_64.cvs', 'train_lat_size_64.cvs')
-train_with_TSNE('test_lat_size_128.cvs', 'train_lat_size_128.cvs')
+train_model(num_epochs=5)
+# train_with_TSNE('test_lat_size_2.cvs', 'train_lat_size_2.cvs')
+# train_with_TSNE('test_lat_size_4.cvs', 'train_lat_size_4.cvs')
+# train_with_TSNE('test_lat_size_8.cvs', 'train_lat_size_8.cvs')
+# train_with_TSNE('test_lat_size_16.cvs', 'train_lat_size_16.cvs')
+# train_with_TSNE('test_lat_size_32.cvs', 'train_lat_size_32.cvs')
+# train_with_TSNE('test_lat_size_64.cvs', 'train_lat_size_64.cvs')
+# train_with_TSNE('test_lat_size_128.cvs', 'train_lat_size_128.cvs')
