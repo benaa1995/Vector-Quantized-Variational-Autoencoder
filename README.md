@@ -25,7 +25,8 @@ and we implement it on the previos code and get success of 100% of the test grou
 1. first we copy and learn pyturch code from https://medium.com/pytorch/implementing-an-autoencoder-in-pytorch-19baa22647d1
 
 The encoder and the decoder are neural networks that build the autoencoder model, as depicted in the following figure:
-![autoencoder](https://user-images.githubusercontent.com/58992981/204745407-830a8e45-8a0c-4b1d-8921-49f2212cc43b.png)
+![0_b5eT77a_idC3v3BP](https://user-images.githubusercontent.com/58992981/213869707-c2d390b2-b0a8-4bb8-b9ce-da56740a69fb.png)
+
 
 2. We made a comparison between the TRAIN LOSS vs TEST LOSS for EPOCH 1-100:
 * Example for Latent size when equal to 64
