@@ -317,6 +317,7 @@ def convert_img_from_latent(encoder, decoder, n=10, latent_size=4, num_of_steps=
 
 
 # save the latent vector in cvs and train liniar logistic on this model
+# save the latent vector in cvs and train liniar logistic on this model
 def convert_latent_to_cvs(encoder, latent_size, file_name, dataloader, dataset, device):
     req_col = {}
     X = "X"
@@ -330,13 +331,7 @@ def convert_latent_to_cvs(encoder, latent_size, file_name, dataloader, dataset, 
     print(df)
     encoder.eval()
     with torch.no_grad():  # No need to track the gradients
-        # get the label
-        y = dataset.targets
-        y = y.cpu().detach().numpy()
-        print(len(y))
-        print(dataloader)
-        print(len(dataloader))
-        for image_batch, _ in dataloader:
+        for image_batch, target_batch in dataloader:
             # Move tensor to the proper device
             image_batch = image_batch.to(device)
             curr_batch_size = image_batch.shape
@@ -346,9 +341,10 @@ def convert_latent_to_cvs(encoder, latent_size, file_name, dataloader, dataset, 
             bach_y = y[0:curr_num_of_row]
             y = y[curr_num_of_row:]
             encoded_data = encoded_data.cpu().detach().numpy()
+            target_batch = target_batch.cpu().detach().numpy()
             rows = np.zeros((curr_num_of_row, latent_size + 1))
             rows[:, :-1] = encoded_data
-            bach_y = bach_y.reshape((-1, 1))
+            bach_y = target_batch.reshape((-1, 1))
             rows[:, -1:] = bach_y
             # add the row to the data frame
             for row in rows:
@@ -357,6 +353,7 @@ def convert_latent_to_cvs(encoder, latent_size, file_name, dataloader, dataset, 
         file_name = file_name + '.cvs'
         # save the dataframe as cvs file
         df.to_csv(file_name)
+
 
 
 def train_with_log_reg(test_path, train_path):
@@ -390,38 +387,37 @@ def train_with_log_reg(test_path, train_path):
 
 
 
-def train_with_TSNE(test_path, train_path):
+def train_with_TSNE(data_path, num_of_sample = 1000):
     # load the data
-    # df_train = pd.read_csv(train_path)
-    df_test = pd.read_csv(test_path)
-    df_train = pd.read_csv(train_path)
-    x_test = df_test.to_numpy()
-    x_test = x_test[:, 1:-1]
-    y_test = df_test['Y'].values
-    x_train = df_train.to_numpy()
-    x_train = x_train[:, 1:-1]
-    y_train = df_train['Y'].values
+    df = pd.read_csv(data_path)
+
+    x = df.to_numpy()
+    len_x, _ = x.shape
+    if(num_of_sample>len_x):
+        num_of_sample = len_x
+    x = x[:num_of_sample, 1:-1]
+    y = df['Y'].values.astype(int)
+    y = y[:num_of_sample]
 
     # sklrn linear regration
     tsne = TSNE(2)
-    tsne_result = tsne.fit_transform(x_test)
+    tsne_result = tsne.fit_transform(x)
     tsne_result.shape
 
-    tsne_result_df = pd.DataFrame({'tsne_1': tsne_result[:,0], 'tsne_2': tsne_result[:,1], 'label': y_test})
+    tsne_result_df = pd.DataFrame({'tsne_1': tsne_result[:, 0], 'tsne_2': tsne_result[:, 1], 'label': y})
     print(tsne_result_df)
-    print(np.unique(y_test))
+    print(np.unique(y))
     fig, ax = plt.subplots(1)
-    sns.scatterplot(x='tsne_1', y='tsne_2', hue='label', data=tsne_result_df, ax=ax,s=30, palette={'green',})
+    sns.scatterplot(x='tsne_1', y='tsne_2', hue='label', data=tsne_result_df, ax=ax, s=30,
+                    palette=['darkgreen', 'red', 'black', 'orange', 'blue', 'cyan', 'fuchsia', 'lime', 'dimgray',
+                             'brown'])
 
-    lim = (tsne_result.min()-5, tsne_result.max()+5)
+    lim = (tsne_result.min() - 5, tsne_result.max() + 5)
     ax.set_xlim(lim)
     ax.set_ylim(lim)
     ax.set_aspect('equal')
     ax.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.0)
     plt.show()
-
-    # print("accuracy on train = ", 100*accuracy_train/len(y_train), "%" )
-    # print("accuracy on test = ", 100*accuracy_test/ len(y_test), "%")
 
 
 
@@ -535,7 +531,7 @@ def latent_size_stat():
     df.to_csv('statistic of latent size and epoch.csv')
 
 
-# train_model(latent_size = 16,num_epochs=100)
+train_model(latent_size = 16,num_epochs=100)
 # latent_size_stat()
 #train_model(num_epochs=5)
 train_with_TSNE('test_lat_size_2.cvs', 'train_lat_size_2.cvs')
