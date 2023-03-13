@@ -52,17 +52,7 @@ train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size)
 # valid_loader = torch.utils.data.DataLoader(val_data, batch_size=batch_size)
 test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
 
-# get some random training images
-dataiter = iter(train_loader)
-images, labels = next(dataiter)
 
-img = torchvision.utils.make_grid(images)
-npimg = img.numpy()
-plt.imshow(np.transpose(npimg, (1, 2, 0)))
-plt.show()
-
-
-# print(' '.join(f'{classes[labels[j]]:5s}' for j in range(batch_size)))
 
 
 class Encoder(nn.Module):
@@ -143,7 +133,7 @@ class Decoder(nn.Module):
         return x
 
 
-def vae_loss(image_batch, decoded_data, loss_fn, z_log_var, z_mean):
+def vae_loss(image_batch, decoded_data, loss_fn, z_log_var, z_mean, beta_exp=0):
     kl_div = -0.5 * torch.sum(1 + z_log_var - z_mean ** 2 - torch.exp(z_log_var), axis=1)  # sum over latent dimension
     batchsize = kl_div.size(0)
     kl_div = kl_div.mean()  # average over batch dimension
@@ -152,13 +142,15 @@ def vae_loss(image_batch, decoded_data, loss_fn, z_log_var, z_mean):
     pixelwise = pixelwise.view(batchsize, -1).sum(axis=1)  # sum over pixels
     pixelwise = pixelwise.mean()  # average over batch dimension
 
+    beta = 2 ** beta_exp
+
     # Evaluate loss
-    loss = pixelwise + kl_div
+    loss = pixelwise + beta * kl_div
     return loss
 
 
 ### Training function
-def train_epoch(encoder, decoder, device, dataloader, loss_fn, optimizer):
+def train_epoch(encoder, decoder, device, dataloader, loss_fn, optimizer, beta_exp=0):
     # Set train mode for both the encoder and the decoder
     encoder.train()
     decoder.train()
@@ -173,7 +165,7 @@ def train_epoch(encoder, decoder, device, dataloader, loss_fn, optimizer):
         decoded_data = decoder(encoded_data)
 
         # Evaluate loss
-        loss = vae_loss(image_batch, decoded_data, loss_fn, z_log_var, z_mean)
+        loss = vae_loss(image_batch, decoded_data, loss_fn, z_log_var, z_mean, beta_exp=beta_exp)
 
         # Backward pass
         optimizer.zero_grad()
@@ -187,7 +179,7 @@ def train_epoch(encoder, decoder, device, dataloader, loss_fn, optimizer):
 
 
 ### Testing function
-def test_epoch(encoder, decoder, device, dataloader, loss_fn):
+def test_epoch(encoder, decoder, device, dataloader, loss_fn, beta_exp=0):
     # Set evaluation mode for encoder and decoder
     encoder.eval()
     decoder.eval()
@@ -202,7 +194,7 @@ def test_epoch(encoder, decoder, device, dataloader, loss_fn):
             # Decode data
             decoded_data = decoder(encoded_data)
             # Append the network loss to the list
-            val_loss.append(vae_loss(image_batch, decoded_data, loss_fn, z_log_var, z_mean).to(device))
+            val_loss.append(vae_loss(image_batch, decoded_data, loss_fn, z_log_var, z_mean, beta_exp=beta_exp).to(device))
         # Create a single tensor with all the values in the lists
         val_loss = torch.stack(val_loss)
         # Evaluate global loss
@@ -210,7 +202,7 @@ def test_epoch(encoder, decoder, device, dataloader, loss_fn):
     return val_loss.data
 
 
-def train_model(lr=0.001, latent_size=4, num_epochs=30):
+def train_model(lr=0.001, latent_size=4, num_epochs=30, beta_exp=0):
     ### Define the loss function
     loss_fn = F.mse_loss
 
@@ -248,12 +240,12 @@ def train_model(lr=0.001, latent_size=4, num_epochs=30):
     diz_loss = {'train_loss': [], 'val_loss': []}
     for epoch in range(num_epochs):
         train_loss = train_epoch(encoder, decoder, device,
-                                 train_loader, loss_fn, optim)
-        val_loss = test_epoch(encoder, decoder, device, test_loader, loss_fn)
+                                 train_loader, loss_fn, optim, beta_exp=beta_exp)
+        val_loss = test_epoch(encoder, decoder, device, test_loader, loss_fn, beta_exp=beta_exp)
         print('\n EPOCH {}/{} \t train loss {} \t val loss {}'.format(epoch + 1, num_epochs, train_loss, val_loss))
         diz_loss['train_loss'].append(train_loss)
         diz_loss['val_loss'].append(val_loss)
-        temp_name = "Loss, latent size_" + str(latent_size)
+        temp_name = "Loss, beta_exp =" + str(beta_exp)
         writer.add_scalars(temp_name, {'Traning loss': train_loss, 'Test loss': val_loss}, global_step)
         writer.flush()
         global_step += 1
@@ -274,8 +266,9 @@ def train_model(lr=0.001, latent_size=4, num_epochs=30):
         # ef.create_random_img(decoder, n=10, latent_size=latent_size)
         # ef.latent_digit_impact(encoder, decoder,  test_dataset, latent_size=latent_size)
         # ef.convert_img_from_latent(encoder, decoder, test_dataset, latent_size=latent_size)
-    # hf.convert_latent_to_cvs(encoder, latent_size, 'test_lat_size_testttt', test_loader, device)
-    writer.add_scalar("latent size vs minimun loss", min(diz_loss["val_loss"]), latent_size)
+    converted_file_name = 'test_beta_exp_test' + str(beta_exp)
+    hf.convert_latent_to_cvs(encoder, latent_size, converted_file_name, test_loader, device)
+    writer.add_scalar("beta_exp vs minimun loss", min(diz_loss["val_loss"]), beta_exp)
     writer.flush()
     # plot_ae_outputs(encoder, decoder, n=10, device=device)
     # create_img(decoder,n=4)
@@ -290,6 +283,12 @@ def train_model(lr=0.001, latent_size=4, num_epochs=30):
 
 
 def main():
+
+    #
+    # beta_exp_list = [-4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7]
+    # for beta_exp in beta_exp_list:
+    #     train_model(latent_size=16, num_epochs=5, beta_exp=beta_exp)
+    #
     # train_model(latent_size=16, num_epochs=1)
 
     ef.train_with_TSNE('test_CIFAR10.cvs')
