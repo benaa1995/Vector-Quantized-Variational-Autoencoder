@@ -15,12 +15,11 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.manifold import TSNE
 import seaborn as sns
 
-
+import halper_func as hf
 
 
 ### task one and two creat image from random latent vectors
-def create_random_img(decoder, n=10, latent_size=4,
-                      device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")):
+def create_random_img(decoder, device, plot_adapter, cmap=None, n=10, latent_size=4):
     size = torch.eye(1, latent_size)
     # Set evaluation mode for the decoder
     decoder.eval()
@@ -30,17 +29,15 @@ def create_random_img(decoder, n=10, latent_size=4,
             ax = plt.subplot(int(n / 5), 5, i + 1)
             if i == 0:
                 plt.title("created random image by the decoder")
-                # ax.set_title("created random image by the decoder")
-            # get random vector in "normal(0,1)"
+
+            # get random vector in "normal(0,1)" distribution
             p = torch.distributions.Normal(torch.zeros_like(size), torch.ones_like(size))
             random_latent_vec = p.rsample()
 
-            # random_mu = torch.tensor(-2 * np.random.rand(1, latent_size) + 1, dtype=torch.float)
-            # random_log_var = torch.tensor(-2 * np.random.rand(1, latent_size) + 1, dtype=torch.float)
-            # random_latent_vec = Encoder.reparameterize(encoder,random_mu, random_log_var)
             img = decoder(random_latent_vec)
             random_latent_vectors.append(random_latent_vec)
-            plt.imshow(img.to(device).squeeze().numpy(), cmap='gist_gray')
+            np_img = img.to(device).squeeze().numpy()
+            plt.imshow(plot_adapter(np_img), cmap=cmap)
             ax.get_xaxis().set_visible(False)
             ax.get_yaxis().set_visible(False)
         plt.show()
@@ -48,20 +45,19 @@ def create_random_img(decoder, n=10, latent_size=4,
 
 # The function take n image and change every digit in ther latent vector to chack what the impcat of
 # every digit in the vector on the image
-def latent_digit_impact(encoder, decoder,  test_dataset, n=8, latent_size=4, num_of_steps=8,
-                        device=torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")):
+def latent_digit_impact(encoder, decoder, device, test_dataset, targets_adapter, img_idx_adapter, plot_adapter,
+                        cmap=None, n=8, latent_size=4, num_of_steps=8):
     origin_image_list = []
     image_vec_list = []
     changed_image_list = []
-    # device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-    print("latent_digit_impact device = ", device)
+
     encoder.eval()
     decoder.eval()
     # plo image size
     plt.figure(figsize=(16, 4.5))
     # get the image
-    targets = test_dataset.targets.numpy()
-    t_idx = {i: np.where(targets == i)[0][0] for i in range(n)}
+    targets = targets_adapter(test_dataset)
+    t_idx = img_idx_adapter(targets, n)
 
     with torch.no_grad():
         # save the original image and the latent vector
@@ -82,40 +78,43 @@ def latent_digit_impact(encoder, decoder,  test_dataset, n=8, latent_size=4, num
                     if (step == 0):
                         # the original image
                         ax = plt.subplot(latent_size, n + 3, cordinate * (num_of_steps + 3) + 1)
-                        plt.imshow(origin_image_list[img_index].to(device).squeeze().numpy(), cmap='gist_gray')
+                        np_curr_origin_image = origin_image_list[img_index].to(device).squeeze().numpy()
+                        plt.imshow(plot_adapter(np_curr_origin_image), cmap=cmap)
                         ax.get_xaxis().set_visible(False)
                         ax.get_yaxis().set_visible(False)
-                        #plt.title(f"Original image")
+                        # plt.title(f"Original image")
                         # decoder on the original latent vector
                         ax = plt.subplot(latent_size, n + 3, cordinate * (num_of_steps + 3) + 2)
-                        plt.imshow(decoder(image_vec_list[img_index]).to(device).squeeze().numpy(), cmap='gist_gray')
+                        np_curr_rec_image = decoder(image_vec_list[img_index]).to(device).squeeze().numpy()
+                        plt.imshow(plot_adapter(np_curr_rec_image), cmap=cmap)
                         ax.get_xaxis().set_visible(False)
                         ax.get_yaxis().set_visible(False)
-                        #plt.title(f"Original vector")
+                        # plt.title(f"Original vector")
                     # add to the converted image to the plot
                     ax = plt.subplot(latent_size, n + 3, cordinate * (num_of_steps + 3) + step + 3)
-                    plt.imshow(changed_image.to(device).squeeze().numpy(), cmap='gist_gray')
-                    #plt.title(f"cord: {cordinate}. value: {-1 + step * (2 / num_of_steps)}")
+                    np_changed_image = changed_image.to(device).squeeze().numpy()
+                    plt.imshow(plot_adapter(np_changed_image), cmap=cmap)
+                    # plt.title(f"cord: {cordinate}. value: {-1 + step * (2 / num_of_steps)}")
                     ax.get_xaxis().set_visible(False)
                     ax.get_yaxis().set_visible(False)
-                    # add to the the converted image to the changed list
+                    # add to the converted image to the changed list
                     changed_image_list.append(changed_image)
             plt.show()
 
+
 # The function two image and convert one imag to the second by margin the two latent vector
 # with different impact
-def convert_img_from_latent(encoder, decoder, test_dataset, n=10, latent_size=4, num_of_steps=8,
-                            device=torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")):
+def convert_img_from_latent(encoder, decoder, device, test_dataset, targets_adapter, img_idx_adapter, plot_adapter,
+                            cmap=None, n=10, latent_size=4, num_of_steps=8):
     origin_image_list = []
     image_vec_list = []
-    print("convert_img_from_latent device = ", device)
     encoder.eval()
     decoder.eval()
     # plo image size
     plt.figure(figsize=(16, 4.5))
     # get the image
-    targets = test_dataset.targets.numpy()
-    t_idx = {i: np.where(targets == i)[0][0] for i in range(n)}
+    targets = targets_adapter(test_dataset)
+    t_idx = img_idx_adapter(targets, n)
     with torch.no_grad():
         # save the requested original image and the latent vector
         for i in range(n):
@@ -126,15 +125,6 @@ def convert_img_from_latent(encoder, decoder, test_dataset, n=10, latent_size=4,
         for img_index in range(len(image_vec_list) // 2):
             temp_first_vec = image_vec_list[img_index].detach().clone()
             temp_second_vec = image_vec_list[-img_index - 1].detach().clone()
-            # ax = plt.subplot(latent_size, n + 1, 12)
-            # plt.imshow(origin_image_list[img_index].cpu().squeeze().numpy(), cmap='gist_gray')
-            # ax.get_xaxis().set_visible(False)
-            # ax.get_yaxis().set_visible(False)
-            #
-            # ax = plt.subplot(latent_size, n + 1, 13)
-            # plt.imshow(origin_image_list[-img_index - 1].cpu().squeeze().numpy(), cmap='gist_gray')
-            # ax.get_xaxis().set_visible(False)
-            # ax.get_yaxis().set_visible(False)
 
             for step in range(num_of_steps + 1):
                 t = (1 / num_of_steps) * step
@@ -144,18 +134,20 @@ def convert_img_from_latent(encoder, decoder, test_dataset, n=10, latent_size=4,
                 changed_image = decoder(temp_vec)
                 # add to the converted image to the plot
                 ax = plt.subplot(1, n + 1, step + 1)
-                plt.imshow(changed_image.to(device).squeeze().numpy(), cmap='gist_gray')
+                np_changed_image = changed_image.to(device).squeeze().numpy()
+                plt.imshow(plot_adapter(np_changed_image), cmap=cmap)
                 ax.get_xaxis().set_visible(False)
                 ax.get_yaxis().set_visible(False)
             plt.show()
-            
-def train_with_TSNE(data_path, num_of_sample = 1000):
+
+
+def train_with_TSNE(data_path, num_of_sample=1000):
     # load the data
     df = pd.read_csv(data_path)
 
     x = df.to_numpy()
     len_x, _ = x.shape
-    if(num_of_sample>len_x):
+    if (num_of_sample > len_x):
         num_of_sample = len_x
     x = x[:num_of_sample, 1:-1]
     y = df['Y'].values.astype(int)

@@ -20,9 +20,7 @@ from torch.utils.tensorboard import SummaryWriter
 import halper_func as hf
 import expirment_func as ef
 
-
-
-#writer for tnsorboard
+# writer for tnsorboard
 writer = SummaryWriter(f'runs/CIFAR10/autoencoder_tensorboard')
 
 data_dir = 'dataset_CIFAR10'
@@ -54,7 +52,6 @@ train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size)
 # valid_loader = torch.utils.data.DataLoader(val_data, batch_size=batch_size)
 test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
 
-
 # get some random training images
 dataiter = iter(train_loader)
 images, labels = next(dataiter)
@@ -64,8 +61,8 @@ npimg = img.numpy()
 plt.imshow(np.transpose(npimg, (1, 2, 0)))
 plt.show()
 
-# print(' '.join(f'{classes[labels[j]]:5s}' for j in range(batch_size)))
 
+# print(' '.join(f'{classes[labels[j]]:5s}' for j in range(batch_size)))
 
 
 class Encoder(nn.Module):
@@ -84,8 +81,8 @@ class Encoder(nn.Module):
             nn.ReLU(True)
         )
 
-        self.z_mean =  nn.Linear(128, encoded_space_dim)
-        self.z_log_var =  nn.Linear(128, encoded_space_dim)
+        self.z_mean = nn.Linear(128, encoded_space_dim)
+        self.z_log_var = nn.Linear(128, encoded_space_dim)
 
         ### Flatten layer
         self.flatten = nn.Flatten(start_dim=1)
@@ -95,10 +92,10 @@ class Encoder(nn.Module):
             nn.ReLU(True),
             # nn.Linear(128, encoded_space_dim)
         )
-    
+
     def reparameterize(self, z_mu, z_log_var):
-        eps = torch.randn(z_mu.size(0), z_mu.size(1))#.to(z_mu.get_device())
-        z = z_mu + eps * torch.exp(z_log_var/2.) 
+        eps = torch.randn(z_mu.size(0), z_mu.size(1))  # .to(z_mu.get_device())
+        z = z_mu + eps * torch.exp(z_log_var / 2.)
         return z
 
     def forward(self, x):
@@ -107,8 +104,9 @@ class Encoder(nn.Module):
         x = self.encoder_lin(x)
         z_mean, z_log_var = self.z_mean(x), self.z_log_var(x)
         encoded_data = self.reparameterize(z_mean, z_log_var)
-        
-        return encoded_data, z_mean, z_log_var 
+
+        return encoded_data, z_mean, z_log_var
+
 
 class Decoder(nn.Module):
 
@@ -144,20 +142,20 @@ class Decoder(nn.Module):
         x = torch.sigmoid(x)
         return x
 
-def vae_loss(image_batch , decoded_data, loss_fn, z_log_var, z_mean):
 
-
-    kl_div = -0.5 * torch.sum(1 + z_log_var - z_mean**2 - torch.exp(z_log_var), axis=1) # sum over latent dimension
+def vae_loss(image_batch, decoded_data, loss_fn, z_log_var, z_mean):
+    kl_div = -0.5 * torch.sum(1 + z_log_var - z_mean ** 2 - torch.exp(z_log_var), axis=1)  # sum over latent dimension
     batchsize = kl_div.size(0)
-    kl_div = kl_div.mean() # average over batch dimension
+    kl_div = kl_div.mean()  # average over batch dimension
 
     pixelwise = loss_fn(decoded_data, image_batch, reduction='none')
-    pixelwise = pixelwise.view(batchsize, -1).sum(axis=1) # sum over pixels
-    pixelwise = pixelwise.mean() # average over batch dimension
+    pixelwise = pixelwise.view(batchsize, -1).sum(axis=1)  # sum over pixels
+    pixelwise = pixelwise.mean()  # average over batch dimension
 
     # Evaluate loss
     loss = pixelwise + kl_div
     return loss
+
 
 ### Training function
 def train_epoch(encoder, decoder, device, dataloader, loss_fn, optimizer):
@@ -175,7 +173,7 @@ def train_epoch(encoder, decoder, device, dataloader, loss_fn, optimizer):
         decoded_data = decoder(encoded_data)
 
         # Evaluate loss
-        loss = vae_loss(image_batch , decoded_data, loss_fn, z_log_var, z_mean)
+        loss = vae_loss(image_batch, decoded_data, loss_fn, z_log_var, z_mean)
 
         # Backward pass
         optimizer.zero_grad()
@@ -186,6 +184,7 @@ def train_epoch(encoder, decoder, device, dataloader, loss_fn, optimizer):
         train_loss.append(loss.detach().to(device).numpy())
 
     return np.mean(train_loss)
+
 
 ### Testing function
 def test_epoch(encoder, decoder, device, dataloader, loss_fn):
@@ -203,16 +202,17 @@ def test_epoch(encoder, decoder, device, dataloader, loss_fn):
             # Decode data
             decoded_data = decoder(encoded_data)
             # Append the network loss to the list
-            val_loss.append(vae_loss(image_batch , decoded_data, loss_fn, z_log_var, z_mean).to(device))
+            val_loss.append(vae_loss(image_batch, decoded_data, loss_fn, z_log_var, z_mean).to(device))
         # Create a single tensor with all the values in the lists
         val_loss = torch.stack(val_loss)
         # Evaluate global loss
         val_loss = torch.mean(val_loss)
     return val_loss.data
 
+
 def train_model(lr=0.001, latent_size=4, num_epochs=30):
     ### Define the loss function
-    loss_fn =  F.mse_loss
+    loss_fn = F.mse_loss
 
     ### Define an optimizer (both for the encoder and the decoder!)
     # lr= 0.001
@@ -257,34 +257,44 @@ def train_model(lr=0.001, latent_size=4, num_epochs=30):
         writer.add_scalars(temp_name, {'Traning loss': train_loss, 'Test loss': val_loss}, global_step)
         writer.flush()
         global_step += 1
-        hf.plot_ae_outputs_CIFAR10(encoder, decoder, test_dataset, classes=classes,
-        n = 10, device = device)
-        if epoch%10 == 0:
-            hf.plot_ae_outputs_CIFAR10(encoder, decoder, test_dataset,classes=classes, n=10, device=device)
-            # ef.create_random_img(decoder, n=10, latent_size=latent_size)
-            # ef.latent_digit_impact(encoder, decoder,  test_dataset, latent_size=latent_size)
-            # ef.convert_img_from_latent(encoder, decoder, test_dataset, latent_size=latent_size)
+
+        hf.plot_ae_outputs(encoder, decoder, test_dataset, device, hf.targets_CIFAR10_adapter,
+                           hf.img_idx_CIFAR10_adapter, hf.plot_CIFAR10_adapter)
+        # hf.convert_latent_to_cvs(encoder, latent_size, 'test_CIFAR10', test_loader, device)
+        # ef.create_random_img(decoder, device, hf.plot_CIFAR10_adapter, latent_size=latent_size)
+
+        # ef.latent_digit_impact(encoder, decoder, device, test_dataset, hf.targets_CIFAR10_adapter,hf.img_idx_CIFAR10_adapter,
+        #                        hf.plot_CIFAR10_adapter,latent_size=latent_size)
+
+        ef.convert_img_from_latent(encoder, decoder, device, test_dataset, hf.targets_CIFAR10_adapter,
+                                   hf.img_idx_CIFAR10_adapter, hf.plot_CIFAR10_adapter, latent_size=latent_size)
+
+        # if epoch % 10 == 0:
+        # hf.plot_ae_outputs_CIFAR10(encoder, decoder, test_dataset, classes=classes, n=10, device=device)
+        # ef.create_random_img(decoder, n=10, latent_size=latent_size)
+        # ef.latent_digit_impact(encoder, decoder,  test_dataset, latent_size=latent_size)
+        # ef.convert_img_from_latent(encoder, decoder, test_dataset, latent_size=latent_size)
     # hf.convert_latent_to_cvs(encoder, latent_size, 'test_lat_size_testttt', test_loader, device)
     writer.add_scalar("latent size vs minimun loss", min(diz_loss["val_loss"]), latent_size)
     writer.flush()
-    #plot_ae_outputs(encoder, decoder, n=10, device=device)
+    # plot_ae_outputs(encoder, decoder, n=10, device=device)
     # create_img(decoder,n=4)
-    #create_random_img(decoder, 10, latent_size)
-    #test_file_name = 'test_lat_size_' + str(latent_size)
+    # create_random_img(decoder, 10, latent_size)
+    # test_file_name = 'test_lat_size_' + str(latent_size)
     # convert_latent_to_cvs(encoder, latent_size, test_file_name, test_loader, test_dataset, device)
     # train_file_name = 'train_lat_size_' + str(latent_size)
     # convert_latent_to_cvs(encoder, latent_size, train_file_name, train_loader, train_dataset, device)
     # latent_digit_impact(encoder, decoder, n=8, latent_size=4, num_of_steps=8, device=device)
-    #convert_img_from_latent(encoder, decoder, n=10, latent_size=latent_size, num_of_steps=8, device=device)
+    # convert_img_from_latent(encoder, decoder, n=10, latent_size=latent_size, num_of_steps=8, device=device)
     return diz_loss["val_loss"], diz_loss['train_loss']
 
 
 def main():
-    train_model(latent_size = 16,num_epochs=50)
+    # train_model(latent_size=16, num_epochs=1)
 
-    # ef.train_with_TSNE('test_lat_size_16.cvs')
+    ef.train_with_TSNE('test_CIFAR10.cvs')
     # latent_size_stat()
-    #train_model(num_epochs=5)
+    # train_model(num_epochs=5)
     # train_with_TSNE('test_lat_size_2.cvs', 'train_lat_size_2.cvs')
     # train_with_TSNE('test_lat_size_4.cvs', 'train_lat_size_4.cvs')
     # train_with_TSNE('test_lat_size_8.cvs', 'train_lat_size_8.cvs')
@@ -292,6 +302,7 @@ def main():
     # train_with_TSNE('test_lat_size_32.cvs', 'train_lat_size_32.cvs')
     # train_with_TSNE('test_lat_size_64.cvs', 'train_lat_size_64.cvs')
     # train_with_TSNE('test_lat_size_128.cvs', 'train_lat_size_128.cvs')
+
 
 if __name__ == '__main__':
     main()

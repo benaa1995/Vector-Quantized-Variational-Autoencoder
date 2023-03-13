@@ -1,92 +1,64 @@
 import matplotlib.pyplot as plt
-# this module is useful to work with numerical arrays
 import numpy as np
 import pandas as pd
-import random
 import torch
-import torchvision
-from torchvision import transforms
-from torch.utils.data import DataLoader, random_split
-from torch import nn
-import torch.nn.functional as F
-import torch.optim as optim
-from torch.utils.tensorboard import SummaryWriter
 from sklearn.linear_model import LogisticRegression
-from sklearn.manifold import TSNE
 
 
 # import seaborn as sns
 
-
-def plot_ae_outputs(encoder, decoder, test_dataset, n=10,
-                    device=torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")):
-    # device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-    print("plot_ae_outputs device = ", device)
-    plt.figure(figsize=(16, 4.5))
-    test = test_dataset.targets
-    targets = test_dataset.targets.numpy()
-    t_idx = {i: np.where(targets == i)[0][0] for i in range(n)}
-    for i in range(n):
-        ax = plt.subplot(2, n, i + 1)
-        img = test_dataset[t_idx[i]][0].unsqueeze(0).to(device)
-        encoder.eval()
-        decoder.eval()
-        with torch.no_grad():
-            encoded_data, _, _ = encoder(img)
-            rec_img = decoder(encoded_data)
-        plt.imshow(img.to(device).squeeze().numpy(), cmap='gist_gray')
-        ax.get_xaxis().set_visible(False)
-        ax.get_yaxis().set_visible(False)
-        if i == n // 2:
-            ax.set_title('Original images')
-        ax = plt.subplot(2, n, i + 1 + n)
-        plt.imshow(rec_img.to(device).squeeze().numpy(), cmap='gist_gray')
-        ax.get_xaxis().set_visible(False)
-        ax.get_yaxis().set_visible(False)
-        if i == n // 2:
-            ax.set_title('Reconstructed images')
-    plt.show()
-
-
-def plot_ae_outputs_CIFAR10(encoder, decoder, test_dataset, n=10, classes=None,
-                            device=torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")):
-    print("plot_ae_outputs_CIFAR10 device = ", device)
-    plt.figure(figsize=(16, 4.5))
-    test = test_dataset.targets
-    targets = test_dataset.targets
+img_idx_MNIST_adapter = lambda tar, n: {i: np.where(tar == i)[0][0] for i in range(n)}
+def img_idx_CIFAR10_adapter(targets, n):
     t_idx = {}
     for i in range(n):
         for j in range(len(targets)):
             if i == targets[j]:
                 t_idx[i] = j
                 break
+    return t_idx
+
+
+plot_MNIST_adapter = lambda img: img
+
+plot_CIFAR10_adapter = lambda img: np.transpose(img, (1, 2, 0))
+
+targets_MNIST_adapter = lambda test_dataset: test_dataset.targets.numpy()
+
+targets_CIFAR10_adapter = lambda test_dataset: test_dataset.targets
+def plot_ae_outputs(encoder, decoder, test_dataset, device, targets_adapter, img_idx_adapter, plot_adapter,
+                    cmap=None, n=10):
+    plt.figure(figsize=(16, 4.5))
+    # get index of images from every target's type
+    targets = targets_adapter(test_dataset)
+    t_idx = img_idx_adapter(targets, n)
     for i in range(n):
-
-        # np_img = img.numpy()
-        # plt.imshow(np.transpose(np_img, (1, 2, 0)))
-        # plt.show()
-
         ax = plt.subplot(2, n, i + 1)
+        # get the original image
         img = test_dataset[t_idx[i]][0].unsqueeze(0).to(device)
         encoder.eval()
         decoder.eval()
+        # get the re-construct image
         with torch.no_grad():
             encoded_data, _, _ = encoder(img)
             rec_img = decoder(encoded_data)
+        # plot the original image
         np_img = img.to(device).squeeze().numpy()
-        plt.imshow(np.transpose(np_img, (1, 2, 0)))
+        plt.imshow(plot_adapter(np_img), cmap=cmap)
         ax.get_xaxis().set_visible(False)
         ax.get_yaxis().set_visible(False)
         if i == n // 2:
             ax.set_title('Original images')
         ax = plt.subplot(2, n, i + 1 + n)
+        # plot the re-construct image
         np_rec_img = rec_img.to(device).squeeze().numpy()
-        plt.imshow(np.transpose(np_rec_img, (1, 2, 0)))
+        plt.imshow(plot_adapter(np_rec_img), cmap=cmap)
         ax.get_xaxis().set_visible(False)
         ax.get_yaxis().set_visible(False)
         if i == n // 2:
             ax.set_title('Reconstructed images')
     plt.show()
+
+
 
 
 # save the latent vector in cvs and train liniar logistic on this model
