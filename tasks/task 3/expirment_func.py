@@ -19,7 +19,8 @@ import seaborn as sns
 
 
 ### task one and two creat image from random latent vectors
-def create_random_img(decoder, n=10, latent_size=4):
+def create_random_img(decoder, n=10, latent_size=4,
+                      device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")):
     size = torch.eye(1, latent_size)
     # Set evaluation mode for the decoder
     decoder.eval()
@@ -39,7 +40,7 @@ def create_random_img(decoder, n=10, latent_size=4):
             # random_latent_vec = Encoder.reparameterize(encoder,random_mu, random_log_var)
             img = decoder(random_latent_vec)
             random_latent_vectors.append(random_latent_vec)
-            plt.imshow(img.cpu().squeeze().numpy(), cmap='gist_gray')
+            plt.imshow(img.to(device).squeeze().numpy(), cmap='gist_gray')
             ax.get_xaxis().set_visible(False)
             ax.get_yaxis().set_visible(False)
         plt.show()
@@ -81,19 +82,19 @@ def latent_digit_impact(encoder, decoder,  test_dataset, n=8, latent_size=4, num
                     if (step == 0):
                         # the original image
                         ax = plt.subplot(latent_size, n + 3, cordinate * (num_of_steps + 3) + 1)
-                        plt.imshow(origin_image_list[img_index].cpu().squeeze().numpy(), cmap='gist_gray')
+                        plt.imshow(origin_image_list[img_index].to(device).squeeze().numpy(), cmap='gist_gray')
                         ax.get_xaxis().set_visible(False)
                         ax.get_yaxis().set_visible(False)
                         #plt.title(f"Original image")
                         # decoder on the original latent vector
                         ax = plt.subplot(latent_size, n + 3, cordinate * (num_of_steps + 3) + 2)
-                        plt.imshow(decoder(image_vec_list[img_index]).cpu().squeeze().numpy(), cmap='gist_gray')
+                        plt.imshow(decoder(image_vec_list[img_index]).to(device).squeeze().numpy(), cmap='gist_gray')
                         ax.get_xaxis().set_visible(False)
                         ax.get_yaxis().set_visible(False)
                         #plt.title(f"Original vector")
                     # add to the converted image to the plot
                     ax = plt.subplot(latent_size, n + 3, cordinate * (num_of_steps + 3) + step + 3)
-                    plt.imshow(changed_image.cpu().squeeze().numpy(), cmap='gist_gray')
+                    plt.imshow(changed_image.to(device).squeeze().numpy(), cmap='gist_gray')
                     #plt.title(f"cord: {cordinate}. value: {-1 + step * (2 / num_of_steps)}")
                     ax.get_xaxis().set_visible(False)
                     ax.get_yaxis().set_visible(False)
@@ -143,7 +144,7 @@ def convert_img_from_latent(encoder, decoder, test_dataset, n=10, latent_size=4,
                 changed_image = decoder(temp_vec)
                 # add to the converted image to the plot
                 ax = plt.subplot(1, n + 1, step + 1)
-                plt.imshow(changed_image.cpu().squeeze().numpy(), cmap='gist_gray')
+                plt.imshow(changed_image.to(device).squeeze().numpy(), cmap='gist_gray')
                 ax.get_xaxis().set_visible(False)
                 ax.get_yaxis().set_visible(False)
             plt.show()

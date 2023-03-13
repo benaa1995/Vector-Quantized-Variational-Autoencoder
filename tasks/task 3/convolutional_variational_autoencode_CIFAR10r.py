@@ -15,7 +15,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
 
-import seaborn as sns
+# import seaborn as sns
 
 import halper_func as hf
 import expirment_func as ef
@@ -23,12 +23,12 @@ import expirment_func as ef
 
 
 #writer for tnsorboard
-writer = SummaryWriter(f'runs/MNIST/autoencoder_tensorboard')
+writer = SummaryWriter(f'runs/CIFAR10/autoencoder_tensorboard')
 
-data_dir = 'dataset'
+data_dir = 'dataset_CIFAR10'
 
-train_dataset = torchvision.datasets.MNIST(data_dir, train=True, download=True)
-test_dataset = torchvision.datasets.MNIST(data_dir, train=False, download=True)
+train_dataset = torchvision.datasets.CIFAR10(data_dir, train=True, download=True)
+test_dataset = torchvision.datasets.CIFAR10(data_dir, train=False, download=True)
 
 train_transform = transforms.Compose([
     transforms.ToTensor(),
@@ -41,15 +41,32 @@ test_transform = transforms.Compose([
 train_dataset.transform = train_transform
 test_dataset.transform = test_transform
 
+classes = ('plane', 'car', 'bird', 'cat',
+           'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
+
 m = len(train_dataset)
 print("len(train_dataset)= ", m, "len(test_dataset)", len(test_dataset))
 print(test_dataset.targets)
-train_data, val_data = random_split(train_dataset, [int(m - m * 0.2), int(m * 0.2)])
-batch_size = 256
+# train_data, val_data = random_split(train_dataset, [int(m - m * 0.2), int(m * 0.2)])
+batch_size = 150
 
-train_loader = torch.utils.data.DataLoader(train_data, batch_size=batch_size)
-valid_loader = torch.utils.data.DataLoader(val_data, batch_size=batch_size)
+train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size)
+# valid_loader = torch.utils.data.DataLoader(val_data, batch_size=batch_size)
 test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
+
+
+# get some random training images
+dataiter = iter(train_loader)
+images, labels = next(dataiter)
+
+img = torchvision.utils.make_grid(images)
+npimg = img.numpy()
+plt.imshow(np.transpose(npimg, (1, 2, 0)))
+plt.show()
+
+# print(' '.join(f'{classes[labels[j]]:5s}' for j in range(batch_size)))
+
+
 
 class Encoder(nn.Module):
 
@@ -58,7 +75,7 @@ class Encoder(nn.Module):
 
         ### Convolutional section
         self.encoder_cnn = nn.Sequential(
-            nn.Conv2d(1, 8, 3, stride=2, padding=1),
+            nn.Conv2d(3, 8, 3, stride=2, padding=1),
             nn.ReLU(True),
             nn.Conv2d(8, 16, 3, stride=2, padding=1),
             nn.BatchNorm2d(16),
@@ -109,14 +126,14 @@ class Decoder(nn.Module):
 
         self.decoder_conv = nn.Sequential(
             nn.ConvTranspose2d(32, 16, 3,
-                               stride=2, output_padding=0),
+                               stride=2, output_padding=1),
             nn.BatchNorm2d(16),
             nn.ReLU(True),
             nn.ConvTranspose2d(16, 8, 3, stride=2,
                                padding=1, output_padding=1),
             nn.BatchNorm2d(8),
             nn.ReLU(True),
-            nn.ConvTranspose2d(8, 1, 3, stride=2,
+            nn.ConvTranspose2d(8, 3, 3, stride=2,
                                padding=1, output_padding=1)
         )
 
@@ -128,6 +145,8 @@ class Decoder(nn.Module):
         return x
 
 def vae_loss(image_batch , decoded_data, loss_fn, z_log_var, z_mean):
+
+
     kl_div = -0.5 * torch.sum(1 + z_log_var - z_mean**2 - torch.exp(z_log_var), axis=1) # sum over latent dimension
     batchsize = kl_div.size(0)
     kl_div = kl_div.mean() # average over batch dimension
@@ -238,12 +257,14 @@ def train_model(lr=0.001, latent_size=4, num_epochs=30):
         writer.add_scalars(temp_name, {'Traning loss': train_loss, 'Test loss': val_loss}, global_step)
         writer.flush()
         global_step += 1
+        hf.plot_ae_outputs_CIFAR10(encoder, decoder, test_dataset, classes=classes,
+        n = 10, device = device)
         if epoch%10 == 0:
-            hf.plot_ae_outputs(encoder, decoder, test_dataset, n=10, device=device)
-            ef.create_random_img(decoder, n=10, latent_size=latent_size)
-            ef.latent_digit_impact(encoder, decoder,  test_dataset, latent_size=latent_size)
-            ef.convert_img_from_latent(encoder, decoder, test_dataset, latent_size=latent_size)
-    hf.convert_latent_to_cvs(encoder, latent_size, 'test_lat_size_testttt', test_loader, device)
+            hf.plot_ae_outputs_CIFAR10(encoder, decoder, test_dataset,classes=classes, n=10, device=device)
+            # ef.create_random_img(decoder, n=10, latent_size=latent_size)
+            # ef.latent_digit_impact(encoder, decoder,  test_dataset, latent_size=latent_size)
+            # ef.convert_img_from_latent(encoder, decoder, test_dataset, latent_size=latent_size)
+    # hf.convert_latent_to_cvs(encoder, latent_size, 'test_lat_size_testttt', test_loader, device)
     writer.add_scalar("latent size vs minimun loss", min(diz_loss["val_loss"]), latent_size)
     writer.flush()
     #plot_ae_outputs(encoder, decoder, n=10, device=device)
@@ -259,9 +280,9 @@ def train_model(lr=0.001, latent_size=4, num_epochs=30):
 
 
 def main():
-    train_model(latent_size = 16,num_epochs=5)
+    train_model(latent_size = 16,num_epochs=50)
 
-    ef.train_with_TSNE('test_lat_size_16.cvs')
+    # ef.train_with_TSNE('test_lat_size_16.cvs')
     # latent_size_stat()
     #train_model(num_epochs=5)
     # train_with_TSNE('test_lat_size_2.cvs', 'train_lat_size_2.cvs')
