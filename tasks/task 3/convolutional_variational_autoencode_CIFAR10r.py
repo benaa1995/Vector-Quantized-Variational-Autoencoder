@@ -15,6 +15,15 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
 
+
+
+from sklearn.manifold import TSNE
+import seaborn as sns
+import matplotlib.animation as animation
+
+
+
+
 # import seaborn as sns
 
 import halper_func as hf
@@ -46,7 +55,7 @@ m = len(train_dataset)
 print("len(train_dataset)= ", m, "len(test_dataset)", len(test_dataset))
 print(test_dataset.targets)
 # train_data, val_data = random_split(train_dataset, [int(m - m * 0.2), int(m * 0.2)])
-batch_size = 150
+batch_size = 30
 
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size)
 # valid_loader = torch.utils.data.DataLoader(val_data, batch_size=batch_size)
@@ -55,33 +64,66 @@ test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, s
 
 
 
-class Encoder(nn.Module):
+class Vgg16_Encoder(nn.Module):
 
     def __init__(self, encoded_space_dim, fc2_input_dim):
         super().__init__()
 
         ### Convolutional section
-        self.encoder_cnn = nn.Sequential(
-            nn.Conv2d(3, 8, 3, stride=2, padding=1),
-            nn.ReLU(True),
-            nn.Conv2d(8, 16, 3, stride=2, padding=1),
-            nn.BatchNorm2d(16),
-            nn.ReLU(True),
-            nn.Conv2d(16, 32, 3, stride=2, padding=0),
-            nn.ReLU(True)
-        )
-
-        self.z_mean = nn.Linear(128, encoded_space_dim)
-        self.z_log_var = nn.Linear(128, encoded_space_dim)
+        self.features = nn.Sequential(
+          nn.Conv2d(3, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+          nn.BatchNorm2d(64),
+          nn.ReLU(inplace=True),
+          nn.Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+          nn.BatchNorm2d(64),
+          nn.ReLU(inplace=True),
+          nn.Conv2d(64, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+          nn.BatchNorm2d(128),
+          nn.ReLU(inplace=True),
+          nn.Conv2d(128, 128, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1)),
+          nn.BatchNorm2d(128),
+          nn.ReLU(inplace=True),
+          nn.Conv2d(128, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+          nn.BatchNorm2d(256),
+          nn.ReLU(inplace=True),
+          nn.Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+          nn.BatchNorm2d(256),
+          nn.ReLU(inplace=True),
+          nn.Conv2d(256, 256, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1)),
+          nn.BatchNorm2d(256),
+          nn.ReLU(inplace=True),
+          nn.Conv2d(256, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+          nn.BatchNorm2d(512),
+          nn.ReLU(inplace=True),
+          nn.Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+          nn.BatchNorm2d(512),
+          nn.ReLU(inplace=True),
+          nn.Conv2d(512, 512, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1)),
+          nn.BatchNorm2d(512),
+          nn.ReLU(inplace=True),
+          nn.Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+          nn.BatchNorm2d(512),
+          nn.ReLU(inplace=True),
+          nn.Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+          nn.BatchNorm2d(512),
+          nn.ReLU(inplace=True),
+          nn.Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+          nn.BatchNorm2d(512),
+          nn.ReLU(inplace=True),
+  )
 
         ### Flatten layer
         self.flatten = nn.Flatten(start_dim=1)
         ### Linear section
+
         self.encoder_lin = nn.Sequential(
-            nn.Linear(3 * 3 * 32, 128),
+            nn.Linear(4 * 4 * 512, 4096),
             nn.ReLU(True),
-            # nn.Linear(128, encoded_space_dim)
+            nn.Linear(4096, 1000),
+            nn.ReLU(True)
         )
+        self.z_mean = nn.Linear(1000, encoded_space_dim)
+        self.z_log_var = nn.Linear(1000, encoded_space_dim)
 
     def reparameterize(self, z_mu, z_log_var):
         eps = torch.randn(z_mu.size(0), z_mu.size(1))  # .to(z_mu.get_device())
@@ -89,46 +131,77 @@ class Encoder(nn.Module):
         return z
 
     def forward(self, x):
-        x = self.encoder_cnn(x)
+        x = self.features(x)
         x = self.flatten(x)
         x = self.encoder_lin(x)
         z_mean, z_log_var = self.z_mean(x), self.z_log_var(x)
         encoded_data = self.reparameterize(z_mean, z_log_var)
-
         return encoded_data, z_mean, z_log_var
 
 
-class Decoder(nn.Module):
+class Vgg16_Decoder(nn.Module):
 
     def __init__(self, encoded_space_dim, fc2_input_dim):
         super().__init__()
+
         self.decoder_lin = nn.Sequential(
-            nn.Linear(encoded_space_dim, 128),
+            nn.Linear(encoded_space_dim, 1000),
             nn.ReLU(True),
-            nn.Linear(128, 3 * 3 * 32),
-            nn.ReLU(True)
+            nn.Linear(1000, 4096),
+            nn.ReLU(True),
+            nn.Linear(4096, 4 * 4 * 512)
         )
 
         self.unflatten = nn.Unflatten(dim=1,
-                                      unflattened_size=(32, 3, 3))
+                                      unflattened_size=(512, 4, 4))
 
-        self.decoder_conv = nn.Sequential(
-            nn.ConvTranspose2d(32, 16, 3,
-                               stride=2, output_padding=1),
-            nn.BatchNorm2d(16),
-            nn.ReLU(True),
-            nn.ConvTranspose2d(16, 8, 3, stride=2,
-                               padding=1, output_padding=1),
-            nn.BatchNorm2d(8),
-            nn.ReLU(True),
-            nn.ConvTranspose2d(8, 3, 3, stride=2,
-                               padding=1, output_padding=1)
+        self.features = nn.Sequential(
+            # nn.MaxUnpool2d(kernel_size=2, stride=2, padding=0),
+            nn.BatchNorm2d(512),
+            nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+            nn.BatchNorm2d(512),
+            nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+            nn.BatchNorm2d(512),
+            nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+            nn.BatchNorm2d(512),
+            nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(512, 512, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1)),
+            nn.BatchNorm2d(512),
+            nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+            nn.BatchNorm2d(512),
+            nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(512, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+            nn.BatchNorm2d(256),
+            nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(256, 256, kernel_size=(3, 3), stride=(2, 2)),
+            nn.BatchNorm2d(256),
+            nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+            nn.BatchNorm2d(256),
+            nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(256, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+            nn.BatchNorm2d(128),
+            nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(128, 128, kernel_size=(3, 3), stride=(2, 2), output_padding=1),
+            nn.BatchNorm2d(128),
+            nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+            nn.BatchNorm2d(64),
+            nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+            nn.BatchNorm2d(64),
+            nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(64, 3, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
         )
 
     def forward(self, x):
         x = self.decoder_lin(x)
         x = self.unflatten(x)
-        x = self.decoder_conv(x)
+        x = self.features(x)
         x = torch.sigmoid(x)
         return x
 
@@ -216,8 +289,8 @@ def train_model(lr=0.001, latent_size=4, num_epochs=30, beta_exp=0):
     # latent_size = 4
     print("latent_size = ", latent_size)
     # model = Autoencoder(encoded_space_dim=encoded_space_dim)
-    encoder = Encoder(encoded_space_dim=latent_size, fc2_input_dim=128)
-    decoder = Decoder(encoded_space_dim=latent_size, fc2_input_dim=128)
+    encoder = Vgg16_Encoder(encoded_space_dim=latent_size, fc2_input_dim=128)
+    decoder = Vgg16_Decoder(encoded_space_dim=latent_size, fc2_input_dim=128)
     params_to_optimize = [
         {'params': encoder.parameters()},
         {'params': decoder.parameters()}
@@ -258,16 +331,16 @@ def train_model(lr=0.001, latent_size=4, num_epochs=30, beta_exp=0):
         # ef.latent_digit_impact(encoder, decoder, device, test_dataset, hf.targets_CIFAR10_adapter,hf.img_idx_CIFAR10_adapter,
         #                        hf.plot_CIFAR10_adapter,latent_size=latent_size)
 
-        ef.convert_img_from_latent(encoder, decoder, device, test_dataset, hf.targets_CIFAR10_adapter,
-                                   hf.img_idx_CIFAR10_adapter, hf.plot_CIFAR10_adapter, latent_size=latent_size)
+        # ef.convert_img_from_latent(encoder, decoder, device, test_dataset, hf.targets_CIFAR10_adapter,
+        #                            hf.img_idx_CIFAR10_adapter, hf.plot_CIFAR10_adapter)
 
         # if epoch % 10 == 0:
         # hf.plot_ae_outputs_CIFAR10(encoder, decoder, test_dataset, classes=classes, n=10, device=device)
         # ef.create_random_img(decoder, n=10, latent_size=latent_size)
         # ef.latent_digit_impact(encoder, decoder,  test_dataset, latent_size=latent_size)
         # ef.convert_img_from_latent(encoder, decoder, test_dataset, latent_size=latent_size)
-    converted_file_name = 'test_beta_exp_test' + str(beta_exp)
-    hf.convert_latent_to_cvs(encoder, latent_size, converted_file_name, test_loader, device)
+    # converted_file_name = 'test_beta_exp_test' + str(beta_exp)
+    # hf.convert_latent_to_cvs(encoder, latent_size, converted_file_name, test_loader, device)
     writer.add_scalar("beta_exp vs minimun loss", min(diz_loss["val_loss"]), beta_exp)
     writer.flush()
     # plot_ae_outputs(encoder, decoder, n=10, device=device)
@@ -284,14 +357,111 @@ def train_model(lr=0.001, latent_size=4, num_epochs=30, beta_exp=0):
 
 def main():
 
+
+
+    # fig = plt.figure()
+    # axis = plt.axes(xlim=(-50, 50),
+    #                 ylim=(-50, 50))
+    #
+    # curr = axis.plot()
+    #
+    # def init():
+    #     curr.set_data([], [])
+    #     return curr
+
+    # initializing empty values
+    # for x and y co-ordinates
+    xdata, ydata = [], []
+
+    # animation function
+    # def animate(i):
+    #     print(i)
+    #     num_of_sample = 1000
+    #     data_path = origin_data_path+str(i)
+    #     # load the data
+    #     df = pd.read_csv(data_path)
+    #
+    #     x = df.to_numpy()
+    #     len_x, _ = x.shape
+    #     if (num_of_sample > len_x):
+    #         num_of_sample = len_x
+    #     x = x[:num_of_sample, 1:-1]
+    #     y = df['Y'].values.astype(int)
+    #     y = y[:num_of_sample]
+    #
+    #     # sklrn linear regration
+    #     tsne = TSNE(2)
+    #     tsne_result = tsne.fit_transform(x)
+    #     tsne_result.shape
+
+        # tsne_result_df = pd.DataFrame({'tsne_1': tsne_result[:, 0], 'tsne_2': tsne_result[:, 1], 'label': y})
+        # print(tsne_result_df)
+        # print(np.unique(y))
+        # fig,  = plt.subplots(1)
+        # sns.scatterplot(x='tsne_1', y='tsne_2', hue='label', data=tsne_result_df, ax=ax, s=30,
+        #                 palette=['darkgreen', 'red', 'black', 'orange', 'blue', 'cyan', 'fuchsia', 'lime', 'dimgray',
+        #                          'brown'])
+
+        # lim = (tsne_result.min() - 5, tsne_result.max() + 5)
+        # ax.set_xlim(lim)
+        # ax.set_ylim(lim)
+        # ax.set_aspect('equal')
+        # ax.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.0)
+        # curr.set_data(xdata, ydata)
+        # return fig
+
+
+
+
+
+
+
+        # # t is a parameter which varies
+        # # with the frame number
+        # t = 0.1 * i
+        #
+        # # x, y values to be plotted
+        # x = t * np.sin(t)
+        # y = t * np.cos(t)
+        #
+        # # appending values to the previously
+        # # empty x and y data holders
+        # xdata.append(x)
+        # ydata.append(y)
+        # curr.set_data(xdata, ydata)
+        #
+        # return curr,
+
+    # # calling the animation function
+    # anim = animation.FuncAnimation(fig, animate,
+    #                                init_func=init,
+    #                                frames=500,
+    #                                interval=20,
+    #                                blit=True)
+    #
+    # # saves the animation in our desktop
+    # anim.save('growingCoil.mp4', writer='ffmpeg', fps=30)
+
+
+
+
+
+    #
+    # fig, ax = plt.subplots(1)
+    # ax.set_aspect('equal')
+    # ax.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.0)
+
+
+
+
     #
     # beta_exp_list = [-4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7]
     # for beta_exp in beta_exp_list:
     #     train_model(latent_size=16, num_epochs=5, beta_exp=beta_exp)
     #
-    # train_model(latent_size=16, num_epochs=1)
+    train_model(latent_size=64, num_epochs=10, beta_exp=-6)
 
-    ef.train_with_TSNE('test_CIFAR10.cvs')
+    # ef.train_with_TSNE('test_CIFAR10.cvs')
     # latent_size_stat()
     # train_model(num_epochs=5)
     # train_with_TSNE('test_lat_size_2.cvs', 'train_lat_size_2.cvs')
@@ -305,3 +475,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
