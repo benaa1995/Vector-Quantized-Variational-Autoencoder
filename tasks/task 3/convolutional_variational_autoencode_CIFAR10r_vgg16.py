@@ -62,55 +62,54 @@ train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size)
 test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
 
 
-
-
 class Vgg16_Encoder(nn.Module):
 
-    def __init__(self, encoded_space_dim, fc2_input_dim):
-        super().__init__()
+    def _init_(self, encoded_space_dim, fc2_input_dim):
+        super()._init_()
 
         ### Convolutional section
-        self.features = nn.Sequential(
-          nn.Conv2d(3, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
-          nn.BatchNorm2d(64),
-          nn.ReLU(inplace=True),
-          nn.Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
-          nn.BatchNorm2d(64),
-          nn.ReLU(inplace=True),
-          nn.Conv2d(64, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
-          nn.BatchNorm2d(128),
-          nn.ReLU(inplace=True),
-          nn.Conv2d(128, 128, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1)),
-          nn.BatchNorm2d(128),
-          nn.ReLU(inplace=True),
-          nn.Conv2d(128, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
-          nn.BatchNorm2d(256),
-          nn.ReLU(inplace=True),
-          nn.Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
-          nn.BatchNorm2d(256),
-          nn.ReLU(inplace=True),
-          nn.Conv2d(256, 256, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1)),
-          nn.BatchNorm2d(256),
-          nn.ReLU(inplace=True),
-          nn.Conv2d(256, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
-          nn.BatchNorm2d(512),
-          nn.ReLU(inplace=True),
-          nn.Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
-          nn.BatchNorm2d(512),
-          nn.ReLU(inplace=True),
-          nn.Conv2d(512, 512, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1)),
-          nn.BatchNorm2d(512),
-          nn.ReLU(inplace=True),
-          nn.Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
-          nn.BatchNorm2d(512),
-          nn.ReLU(inplace=True),
-          nn.Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
-          nn.BatchNorm2d(512),
-          nn.ReLU(inplace=True),
-          nn.Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
-          nn.BatchNorm2d(512),
-          nn.ReLU(inplace=True),
-  )
+        self.features_1 = nn.Sequential(
+            nn.Conv2d(3, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+            nn.ReLU(inplace=True),
+            # nn.MaxPool2d(kernel_size=2, stride=2, padding=0, return_indices=True, dilation=1, ceil_mode=False),
+            nn.Conv2d(64, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+            nn.ReLU(inplace=True), )
+
+        self.pool_1 = nn.MaxPool2d(kernel_size=2, stride=2, padding=0, return_indices=True)
+
+        self.features_2 = nn.Sequential(
+            nn.Conv2d(128, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+            nn.ReLU(inplace=True), )
+
+        self.pool_2 = nn.MaxPool2d(kernel_size=2, stride=2, padding=0, return_indices=True)
+
+        self.features_3 = nn.Sequential(
+            nn.Conv2d(256, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+            nn.ReLU(inplace=True), )
+
+        self.pool_3 = nn.MaxPool2d(kernel_size=2, stride=2, padding=0, return_indices=True)
+
+        self.features_4 = nn.Sequential(
+            nn.Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+            nn.ReLU(inplace=True),
+            # nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
+        )
 
         ### Flatten layer
         self.flatten = nn.Flatten(start_dim=1)
@@ -120,7 +119,8 @@ class Vgg16_Encoder(nn.Module):
             nn.Linear(4 * 4 * 512, 4096),
             nn.ReLU(True),
             nn.Linear(4096, 1000),
-            nn.ReLU(True)
+            nn.ReLU(True),
+
         )
         self.z_mean = nn.Linear(1000, encoded_space_dim)
         self.z_log_var = nn.Linear(1000, encoded_space_dim)
@@ -131,18 +131,30 @@ class Vgg16_Encoder(nn.Module):
         return z
 
     def forward(self, x):
-        x = self.features(x)
+        x = self.features_1(x)
+        x, indices_pool_1 = self.pool_1(x)
+        # print(indices_pool_1)
+        x = self.features_2(x)
+        x, indices_pool_2 = self.pool_2(x)
+        x = self.features_3(x)
+        x, indices_pool_3 = self.pool_3(x)
+        x = self.features_4(x)
         x = self.flatten(x)
         x = self.encoder_lin(x)
         z_mean, z_log_var = self.z_mean(x), self.z_log_var(x)
         encoded_data = self.reparameterize(z_mean, z_log_var)
-        return encoded_data, z_mean, z_log_var
+
+        indices = [indices_pool_1, indices_pool_2, indices_pool_3]
+        return encoded_data, z_mean, z_log_var, indices
+
+
+
 
 
 class Vgg16_Decoder(nn.Module):
 
-    def __init__(self, encoded_space_dim, fc2_input_dim):
-        super().__init__()
+    def _init_(self, encoded_space_dim, fc2_input_dim):
+        super()._init_()
 
         self.decoder_lin = nn.Sequential(
             nn.Linear(encoded_space_dim, 1000),
@@ -155,53 +167,58 @@ class Vgg16_Decoder(nn.Module):
         self.unflatten = nn.Unflatten(dim=1,
                                       unflattened_size=(512, 4, 4))
 
-        self.features = nn.Sequential(
+        self.features_4 = nn.Sequential(
             # nn.MaxUnpool2d(kernel_size=2, stride=2, padding=0),
-            nn.BatchNorm2d(512),
             nn.ReLU(inplace=True),
             nn.ConvTranspose2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
-            nn.BatchNorm2d(512),
             nn.ReLU(inplace=True),
             nn.ConvTranspose2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
-            nn.BatchNorm2d(512),
             nn.ReLU(inplace=True),
             nn.ConvTranspose2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
-            nn.BatchNorm2d(512),
-            nn.ReLU(inplace=True),
-            nn.ConvTranspose2d(512, 512, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1)),
-            nn.BatchNorm2d(512),
+            nn.ReLU(inplace=True), )
+
+        self.un_pool_3 = nn.MaxUnpool2d(kernel_size=2, stride=2, padding=0)
+
+        self.features_3 = nn.Sequential(
+            nn.ConvTranspose2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
             nn.ReLU(inplace=True),
             nn.ConvTranspose2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
-            nn.BatchNorm2d(512),
             nn.ReLU(inplace=True),
             nn.ConvTranspose2d(512, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
-            nn.BatchNorm2d(256),
-            nn.ReLU(inplace=True),
-            nn.ConvTranspose2d(256, 256, kernel_size=(3, 3), stride=(2, 2)),
-            nn.BatchNorm2d(256),
+            nn.ReLU(inplace=True), )
+
+        self.un_pool_2 = nn.MaxUnpool2d(kernel_size=2, stride=2, padding=0)
+
+        self.features_2 = nn.Sequential(
+            nn.ConvTranspose2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
             nn.ReLU(inplace=True),
             nn.ConvTranspose2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
-            nn.BatchNorm2d(256),
             nn.ReLU(inplace=True),
             nn.ConvTranspose2d(256, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
-            nn.BatchNorm2d(128),
-            nn.ReLU(inplace=True),
-            nn.ConvTranspose2d(128, 128, kernel_size=(3, 3), stride=(2, 2), output_padding=1),
-            nn.BatchNorm2d(128),
+            nn.ReLU(inplace=True), )
+
+        self.un_pool_1 = nn.MaxUnpool2d(kernel_size=2, stride=2, padding=0)
+
+        self.features_1 = nn.Sequential(
+            nn.ConvTranspose2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
             nn.ReLU(inplace=True),
             nn.ConvTranspose2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
-            nn.BatchNorm2d(64),
             nn.ReLU(inplace=True),
             nn.ConvTranspose2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
-            nn.BatchNorm2d(64),
             nn.ReLU(inplace=True),
             nn.ConvTranspose2d(64, 3, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
         )
 
-    def forward(self, x):
+    def forward(self, x, indices):
         x = self.decoder_lin(x)
         x = self.unflatten(x)
-        x = self.features(x)
+        x = self.features_4(x)
+        x = self.un_pool_3(x, indices[2])
+        x = self.features_3(x)
+        x = self.un_pool_2(x, indices[1])
+        x = self.features_2(x)
+        x = self.un_pool_1(x, indices[0])
+        x = self.features_1(x)
         x = torch.sigmoid(x)
         return x
 
@@ -309,6 +326,7 @@ def train_model(lr=0.001, latent_size=4, num_epochs=30, beta_exp=0, save_weights
     encoder.to(device)
     decoder.to(device)
 
+    indices=[]
     # tensorBoard hyper-parameters
     global_step = 1
     # num_epochs = 30
@@ -321,8 +339,10 @@ def train_model(lr=0.001, latent_size=4, num_epochs=30, beta_exp=0, save_weights
             encoder.load_state_dict(torch.load(encoder_path_for_model_weights))
             decoder.load_state_dict(torch.load(decoder_path_for_model_weights))
 
-        train_loss = train_epoch(encoder, decoder, device,
+        train_loss, curr_indices = train_epoch(encoder, decoder, device,
                                  train_loader, loss_fn, optim, beta_exp=beta_exp)
+        if epoch == 0:
+            indices = curr_indices
         val_loss = test_epoch(encoder, decoder, device, test_loader, loss_fn, beta_exp=beta_exp)
         print('\n EPOCH {}/{} \t train loss {} \t val loss {}'.format(epoch + 1, num_epochs, train_loss, val_loss))
         diz_loss['train_loss'].append(train_loss)

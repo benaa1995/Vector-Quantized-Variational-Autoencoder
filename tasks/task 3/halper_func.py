@@ -42,7 +42,8 @@ def plot_ae_outputs(encoder, decoder, test_dataset, device, targets_adapter, img
             encoded_data, _, _ = encoder(img)
             rec_img = decoder(encoded_data)
         # plot the original image
-        np_img = img.to(device).squeeze().numpy()
+        img = img.cpu()
+        np_img = img.cpu().squeeze().numpy()
         plt.imshow(plot_adapter(np_img), cmap=cmap)
         ax.get_xaxis().set_visible(False)
         ax.get_yaxis().set_visible(False)
@@ -50,7 +51,8 @@ def plot_ae_outputs(encoder, decoder, test_dataset, device, targets_adapter, img
             ax.set_title('Original images')
         ax = plt.subplot(2, n, i + 1 + n)
         # plot the re-construct image
-        np_rec_img = rec_img.to(device).squeeze().numpy()
+        rec_img = rec_img.cpu()
+        np_rec_img = rec_img.cpu().squeeze().numpy()
         plt.imshow(plot_adapter(np_rec_img), cmap=cmap)
         ax.get_xaxis().set_visible(False)
         ax.get_yaxis().set_visible(False)

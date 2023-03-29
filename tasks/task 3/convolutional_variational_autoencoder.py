@@ -15,7 +15,7 @@ import halper_func as hf
 import expirment_func as ef
 
 # writer for tnsorboard
-writer = SummaryWriter(f'runs/MNIST/autoencoder_tensorboard')
+writer = SummaryWriter(f'runs/trash/MNIST/lat_16_test_beta')
 
 data_dir = 'dataset'
 
@@ -73,7 +73,7 @@ class Encoder(nn.Module):
         )
 
     def reparameterize(self, z_mu, z_log_var):
-        eps = torch.randn(z_mu.size(0), z_mu.size(1))  # .to(z_mu.get_device())
+        eps = torch.randn(z_mu.size(0), z_mu.size(1)).to(z_mu.get_device())
         z = z_mu + eps * torch.exp(z_log_var / 2.)
         return z
 
@@ -162,9 +162,11 @@ def train_epoch(encoder, decoder, device, dataloader, loss_fn, optimizer, beta_e
         optimizer.step()
         # Print batch loss
         # print('\t partial train loss (single batch): %f' % (loss.data))
-        train_loss.append(loss.detach().to(device).numpy())
+        train_loss.append(loss.detach().to(device))  # .numpy()
 
-    return np.mean(train_loss)
+    tensor_train_loss = torch.stack(train_loss)
+
+    return torch.mean(tensor_train_loss)
 
 
 ### Testing function
@@ -183,7 +185,8 @@ def test_epoch(encoder, decoder, device, dataloader, loss_fn, beta_exp=0):
             # Decode data
             decoded_data = decoder(encoded_data)
             # Append the network loss to the list
-            val_loss.append(vae_loss(image_batch, decoded_data, loss_fn, z_log_var, z_mean, beta_exp=beta_exp).to(device))
+            val_loss.append(
+                vae_loss(image_batch, decoded_data, loss_fn, z_log_var, z_mean, beta_exp=beta_exp).to(device))
         # Create a single tensor with all the values in the lists
         val_loss = torch.stack(val_loss)
         # Evaluate global loss
@@ -216,7 +219,8 @@ def train_model(lr=0.001, latent_size=4, num_epochs=30, beta_exp=0):
 
     # Check if the GPU is available
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-    device = torch.device("cpu")
+    print("device =======> ", device)
+    # device = torch.device("cpu")
     print(f'Selected device: {device}')
 
     # Move both the encoder and the decoder to the selected device
@@ -239,19 +243,24 @@ def train_model(lr=0.001, latent_size=4, num_epochs=30, beta_exp=0):
         writer.flush()
         global_step += 1
 
-        if epoch % 10 == 0:
-            hf.plot_ae_outputs(encoder, decoder, test_dataset, device, hf.targets_MNIST_adapter,
-                               hf.img_idx_MNIST_adapter, hf.plot_MNIST_adapter, cmap='gist_gray')
-            ef.create_random_img(decoder, device, hf.plot_MNIST_adapter, cmap='gist_gray', latent_size=latent_size)
-            # ef.latent_digit_impact(encoder, decoder, device, test_dataset, hf.targets_MNIST_adapter,
-            #                        hf.img_idx_MNIST_adapter, hf.plot_MNIST_adapter, cmap='gist_gray',
-            #                        latent_size=latent_size)
-
-            ef.convert_img_from_latent(encoder, decoder, device, test_dataset, hf.targets_MNIST_adapter,
-                                       hf.img_idx_MNIST_adapter, hf.plot_MNIST_adapter, cmap='gist_gray',
-                                       latent_size=latent_size)
-    converted_file_name =  'test_beta_exp_test' + str(beta_exp)
+    #     if epoch % 10 == 0:
+    #         hf.plot_ae_outputs(encoder, decoder, test_dataset, device, hf.targets_MNIST_adapter,
+    #                            hf.img_idx_MNIST_adapter, hf.plot_MNIST_adapter, cmap='gist_gray')
+    #
+    # ef.create_random_img(decoder, device, hf.plot_MNIST_adapter, cmap='gist_gray', latent_size=latent_size)
+    #
+    # ef.latent_digit_impact(encoder, decoder, device, test_dataset, hf.targets_MNIST_adapter,
+    #                        hf.img_idx_MNIST_adapter, hf.plot_MNIST_adapter, cmap='gist_gray',
+    #                        latent_size=latent_size)
+    #
+    # ef.convert_img_from_latent(encoder, decoder, device, test_dataset, hf.targets_MNIST_adapter,
+    #                            hf.img_idx_MNIST_adapter, hf.plot_MNIST_adapter, cmap='gist_gray',
+    #                            latent_size=latent_size)
+    converted_file_name = 'beta_cvs/test_beta_exp_test' + str(beta_exp)
     hf.convert_latent_to_cvs(encoder, latent_size, converted_file_name, test_loader, device)
+    converted_file_name = 'beta_cvs/train_beta_exp_test' + str(beta_exp)
+    hf.convert_latent_to_cvs(encoder, latent_size, converted_file_name, train_loader, device)
+
     writer.add_scalar("beta_exp vs minimun loss", min(diz_loss["val_loss"]), beta_exp)
     writer.flush()
 
@@ -268,21 +277,29 @@ def train_model(lr=0.001, latent_size=4, num_epochs=30, beta_exp=0):
 
 
 def main():
-    #
-    # beta_exp_list = [-4,-3,-2,-1,0,1,2,3,4,5,6,7]
-    # for beta_exp in beta_exp_list:
-    #     train_model(latent_size=16, num_epochs=5,beta_exp=beta_exp)
+    beta_exp_list = [-3, -2, -1, 0, 1, 2, 3]
+    # beta_exp_list = [-3]
+    for beta_exp in beta_exp_list:
+        print("beta power= ", beta_exp)
+        train_model(latent_size=16, num_epochs=100, beta_exp=beta_exp)
 
-    ef.train_with_TSNE('test_lat_size_16.cvs')
+    # ef.train_with_TSNE('test_lat_size_16.cvs')
     # latent_size_stat()
     # train_model(num_epochs=5)
-    # train_with_TSNE('test_lat_size_2.cvs', 'train_lat_size_2.cvs')
-    # train_with_TSNE('test_lat_size_4.cvs', 'train_lat_size_4.cvs')
-    # train_with_TSNE('test_lat_size_8.cvs', 'train_lat_size_8.cvs')
-    # train_with_TSNE('test_lat_size_16.cvs', 'train_lat_size_16.cvs')
-    # train_with_TSNE('test_lat_size_32.cvs', 'train_lat_size_32.cvs')
-    # train_with_TSNE('test_lat_size_64.cvs', 'train_lat_size_64.cvs')
-    # train_with_TSNE('test_lat_size_128.cvs', 'train_lat_size_128.cvs')
+    # ef.train_with_TSNE('test_beta_exp_test7.cvs')
+    # ef.train_with_TSNE('test_beta_exp_test6.cvs')
+    # ef.train_with_TSNE('test_beta_exp_test5.cvs')
+    # ef.train_with_TSNE('test_beta_exp_test4.cvs')
+    # ef.train_with_TSNE('test_beta_exp_test3.cvs')
+    # hf.train_with_log_reg('test_lat_size_2.cvs', 'train_lat_size_2.cvs')
+    # ef.train_with_TSNE('test_beta_exp_test2.cvs')
+    # ef.train_with_TSNE('test_beta_exp_test1.cvs')
+    # ef.train_with_TSNE('test_beta_exp_test0.cvs')
+    # ef.train_with_TSNE('test_beta_exp_test-1.cvs')
+    # ef.train_with_TSNE('test_beta_exp_test-2.cvs')
+    # ef.train_with_TSNE('test_beta_exp_test-3.cvs')
+    # ef.train_with_TSNE('test_beta_exp_test-4.cvs')
+
 
 
 if __name__ == '__main__':

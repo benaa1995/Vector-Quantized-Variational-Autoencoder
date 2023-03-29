@@ -33,10 +33,11 @@ def create_random_img(decoder, device, plot_adapter, cmap=None, n=10, latent_siz
             # get random vector in "normal(0,1)" distribution
             p = torch.distributions.Normal(torch.zeros_like(size), torch.ones_like(size))
             random_latent_vec = p.rsample()
-
+            random_latent_vec.to(device)
             img = decoder(random_latent_vec)
             random_latent_vectors.append(random_latent_vec)
-            np_img = img.to(device).squeeze().numpy()
+            np_img = img.cpu().squeeze().numpy()
+            print("img.cpu().squeeze().numpy()")
             plt.imshow(plot_adapter(np_img), cmap=cmap)
             ax.get_xaxis().set_visible(False)
             ax.get_yaxis().set_visible(False)

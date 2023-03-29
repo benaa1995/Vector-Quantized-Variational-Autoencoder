@@ -2,27 +2,14 @@ import matplotlib.pyplot as plt
 # this module is useful to work with numerical arrays
 import numpy as np
 import pandas as pd
-import random
-import torch
-import torchvision
-from torchvision import transforms
-from torch.utils.data import DataLoader, random_split
-from torch import nn
-import torch.nn.functional as F
-import torch.optim as optim
-from torch.utils.tensorboard import SummaryWriter
-from sklearn.linear_model import LogisticRegression
-from sklearn.manifold import TSNE
-import seaborn as sns
-
 
 import convolutional_variational_autoencoder as vae
 
 def latent_size_stat():
-    NUM_OF_EPOCH = 4
+    NUM_OF_EPOCH = 110
     STEP_SIZE = 0.25
     NUM_OF_STEPS = 8
-    MAX_POW = 2
+    MAX_POW = 7
 
     ###compare the loss between the train vs test to avoid over fitting
     # creat the cvs colons
