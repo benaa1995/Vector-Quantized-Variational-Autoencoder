@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import random
+
 import torch
 import torchvision
 from torchvision import transforms
@@ -18,14 +19,6 @@ from sklearn.linear_model import LogisticRegression
 
 
 
-"""
-    test_function does blah blah blah.
-
-    :param p1: describe about parameter p1
-    :param p2: describe about parameter p2
-    :param p3: describe about parameter p3
-    :return: describe what it returns
-    """ 
 
 
 ### task one and two creat image from random latent vectors
@@ -62,8 +55,8 @@ def create_random_img(decoder, num_of_image=10, latent_size=4):
 """
     latent_digit_impact does change every digit from latent vector in range of [-1,1] to check the image influetion from encoder.
 
-    :param encoder: the encoder after the train proccess 
-    :param decoder: the decoder after the train proccess 
+    :param encoder: the encoder after the train process 
+    :param decoder: the decoder after the train process 
     :param test_dataset: the test dataset 
     :param num_of_image: the number of image to create
     :param latent_size: the latent size of the autoencoder 
@@ -123,7 +116,7 @@ def latent_digit_impact(encoder, decoder,test_dataset, num_of_image=8, latent_si
             plt.show()
 
 
- # The function two image and convert one imag to the second by margin the two latent vector
+ # The function two image and convert one image to the second by margin the two latent vector
  # with different impact
 """
     convert_img_from_latent  Takes two images convert them to latent vector by using the decoder.
@@ -279,7 +272,7 @@ def train_with_log_reg(test_path, train_path):
 
 """
     latent_size_stat call the train function on the model, for every power of 2 between 0 to "MAX_POW" latent size.
-    and for every "2 power" save the test loss of every epoch between 1 to  NUM_OF_EPOCH in cvs file.\
+    and for every "2 power" save the test loss of every epoch between 1 to  NUM_OF_EPOCH in cvs file.
     :param train_model: the model to check statistic on
     :param target_file: the target file path
     :param num_of_epoch: the number of epoch

@@ -62,3 +62,11 @@ For example Latent SIZE is 16 and Number is 2
 
 <img width="815" alt="Screenshot 2023-01-05 at 20 58 36" src="https://user-images.githubusercontent.com/58992981/210860172-45af5d79-d23c-4f70-9fa3-85356ed55de2.png">
 
+---
+### Task 3 - vq-vae 2
+
+* learn basic pytorch by inplement CNN on MNIST
+1. first we copy and learn pyturch code from https://medium.com/@nutanbhogendrasharma/pytorch-convolutional-neural-network-with-mnist-dataset-4e8a4265e118
+2. we add document to the code and run the code and get success of 99% of the test group
+3. we change the convolition from kernal 5 to 2 convolution of kernal 3 run the code and get success of 95% of the test group 
+4. we serch on the web for cnn with convolution kernal of 3 we found the cnn in

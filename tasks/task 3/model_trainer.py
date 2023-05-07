@@ -5,13 +5,14 @@ import pandas as pd
 
 import convolutional_variational_autoencoder as vae
 
+
 def latent_size_stat():
     NUM_OF_EPOCH = 110
     STEP_SIZE = 0.25
     NUM_OF_STEPS = 8
     MAX_POW = 7
 
-    ###compare the loss between the train vs test to avoid over fitting
+    # ##compare the loss between the train vs test to avoid over fitting
     # creat the cvs colons
     req_col = {'Latent vector size': []}
     epoch = "Epoch"
@@ -55,4 +56,3 @@ def latent_size_stat():
 
 
 latent_size_stat()
-

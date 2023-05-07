@@ -17,6 +17,9 @@ from torch.utils.tensorboard import SummaryWriter
 from sklearn.linear_model import LogisticRegression
 from sklearn.manifold import TSNE
 import seaborn as sns
+
+import ae_model
+
 #writer for tnsorboard
 writer = SummaryWriter(f'runs/MNIST/autoencoder_tensorboard')
 
@@ -435,12 +438,17 @@ def train_model(lr=0.001, latent_size=4, num_epochs=30):
     # latent_size = 4
     print("latent_size = ", latent_size)
     # model = Autoencoder(encoded_space_dim=encoded_space_dim)
-    encoder = Encoder(encoded_space_dim=latent_size, fc2_input_dim=128)
-    decoder = Decoder(encoded_space_dim=latent_size, fc2_input_dim=128)
+    model = ae_model.AE()
     params_to_optimize = [
-        {'params': encoder.parameters()},
-        {'params': decoder.parameters()}
+        {'params': model.enc.parameters()},
+        {'params': model.dec.parameters()}
     ]
+    # encoder = Encoder(encoded_space_dim=latent_size, fc2_input_dim=128)
+    # decoder = Decoder(encoded_space_dim=latent_size, fc2_input_dim=128)
+    # params_to_optimize = [
+    #     {'params': encoder.parameters()},
+    #     {'params': decoder.parameters()}
+    # ]
 
     optim = torch.optim.Adam(params_to_optimize, lr=lr, weight_decay=1e-05)
 
@@ -450,17 +458,24 @@ def train_model(lr=0.001, latent_size=4, num_epochs=30):
     print(f'Selected device: {device}')
 
     # Move both the encoder and the decoder to the selected device
-    encoder.to(device)
-    decoder.to(device)
+    # encoder.to(device)
+    # decoder.to(device)
+    model.to(device)
 
     # tensorBoard hyper-parameters
     global_step = 1
     # num_epochs = 30
     diz_loss = {'train_loss': [], 'val_loss': []}
     for epoch in range(num_epochs):
-        train_loss = train_epoch(encoder, decoder, device,
+        # train_loss = train_epoch(encoder, decoder, device,
+        #                          train_loader, loss_fn, optim)
+        # val_loss = test_epoch(encoder, decoder, device, test_loader, loss_fn)
+
+        train_loss = train_epoch(model.enc, model.dec, device,
                                  train_loader, loss_fn, optim)
-        val_loss = test_epoch(encoder, decoder, device, test_loader, loss_fn)
+        val_loss = test_epoch(model.enc, model.enc, device, test_loader, loss_fn)
+
+
         print('\n EPOCH {}/{} \t train loss {} \t val loss {}'.format(epoch + 1, num_epochs, train_loss, val_loss))
         diz_loss['train_loss'].append(train_loss)
         diz_loss['val_loss'].append(val_loss)
