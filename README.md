@@ -25,13 +25,37 @@ and we implement it on the previos code and get success of 100% of the test grou
 1. first we copy and learn pyturch code from https://medium.com/pytorch/implementing-an-autoencoder-in-pytorch-19baa22647d1
 
 The encoder and the decoder are neural networks that build the autoencoder model, as depicted in the following figure:
+
+
 ![0_b5eT77a_idC3v3BP](https://user-images.githubusercontent.com/58992981/213869707-c2d390b2-b0a8-4bb8-b9ce-da56740a69fb.png)
 
 
 2. We made a comparison between the TRAIN LOSS vs TEST LOSS for EPOCH 1-100:
-* Example for Latent size when equal to 64
 
-<img width="765" alt="Screenshot 2023-01-05 at 20 05 23" src="https://user-images.githubusercontent.com/58992981/210849714-a6a29197-a25f-47a0-b275-d4a3998c8708.png">
+![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/0a93f753-8de6-4f0c-a335-ae311b44a723)
+![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/9988ab52-d9ee-4ffc-9297-7cc67b92b010)
+
+
+![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/ccf09d9b-f6f5-49d6-b94a-93a64c249084)
+![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/f70ebf57-3cf8-4d88-b1ab-18597042fff0)
+
+
+![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/1e501e75-1bae-4b1b-9022-b064f8df1e19)
+![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/87f62df6-fb94-4bc1-bdbb-da6a8a842d96)
+
+
+![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/c38d201f-1fbd-42bb-b3c1-649ea290fa81)
+![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/87054344-3f67-4048-adb4-0ab263938dda)
+
+
+
+![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/d66199bd-c616-4ab2-85e5-50ad0dfa4445)
+
+
+![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/30f0b814-d740-4ebe-bc09-b6caa980ab5a)
+![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/cdbb825c-a9b1-4db0-a7ff-5209f5457c4f)
+
+![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/d66199bd-c616-4ab2-85e5-50ad0dfa4445)
 
 3. We made a comparison between the minimum LOSS of each "LATENT SIZE" from the group {2,4,8,16,32} :
   
