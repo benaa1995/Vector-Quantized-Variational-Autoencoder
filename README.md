@@ -27,7 +27,7 @@ The encoder and the decoder are neural networks that build the autoencoder model
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;![0_b5eT77a_idC3v3BP](https://user-images.githubusercontent.com/58992981/213869707-c2d390b2-b0a8-4bb8-b9ce-da56740a69fb.png)
 
-
+---
 2. We made a comparison between the TRAIN LOSS vs TEST LOSS for EPOCH 1-100:
 
 ![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/9d52b080-e5a5-4e85-b3d0-601de1ee8588)
@@ -45,10 +45,12 @@ The encoder and the decoder are neural networks that build the autoencoder model
 ![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/7e439932-6129-4a75-805f-7ab019811d3b)
 
 
-
+---
 3. We made a comparison between the minimum LOSS of each "LATENT SIZE" from the group {2,4,8,16,32} :
   
   <img width="778" alt="Screenshot 2023-01-05 at 20 08 22" src="https://user-images.githubusercontent.com/58992981/210850182-f3d52a1e-81b9-4988-a69a-af4b08beece2.png">
+  
+---
 
 4. We compared the images created by the networks of each "Latent Size" :
 
@@ -61,7 +63,7 @@ The encoder and the decoder are neural networks that build the autoencoder model
 
 
 
-
+---
 5. We created a table of type cvs containing all the results of all sections 1 to 4, the link of Latent sizes statistic: https://docs.google.com/spreadsheets/d/1uFwPMJs6VD79z750eAqqNCx-qtuPh9zmGxM_9ECyZoQ/edit#gid=0
 
 6. Adding a vector of random values to encoder output in autoencoder:
