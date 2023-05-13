@@ -51,11 +51,16 @@ The encoder and the decoder are neural networks that build the autoencoder model
   <img width="778" alt="Screenshot 2023-01-05 at 20 08 22" src="https://user-images.githubusercontent.com/58992981/210850182-f3d52a1e-81b9-4988-a69a-af4b08beece2.png">
 
 4. We compared the images created by the networks of each "Latent Size" :
-* Let's take number 2 for example
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img width="298" alt="Screenshot 2023-01-05 at 20 26 30" src="https://user-images.githubusercontent.com/58992981/210853583-1e193681-79d5-4183-9249-361ab6fb9164.png">
 
-<img width="674" alt="Screenshot 2023-01-05 at 20 23 19" src="https://user-images.githubusercontent.com/58992981/210853317-6be1b1bd-5cbd-42d0-a71b-130f425e8871.png">
+![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/e6e3f659-a3e0-4c12-bcaa-f0aea60e2600)
+![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/5860edc9-39c4-4a20-91d7-02c2af91ffc7)
+![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/e1be3d2b-c9f6-47ae-9fd1-6a16b1ae3a2b)
+
+
+
+
+
 
 5. We created a table of type cvs containing all the results of all sections 1 to 4, the link of Latent sizes statistic: https://docs.google.com/spreadsheets/d/1uFwPMJs6VD79z750eAqqNCx-qtuPh9zmGxM_9ECyZoQ/edit#gid=0
 
