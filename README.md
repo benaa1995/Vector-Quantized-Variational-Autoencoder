@@ -1,14 +1,11 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img width="664" alt="Screenshot 2023-01-05 at 19 53 04" src="https://user-images.githubusercontent.com/58992981/210847477-5534faeb-0f11-426d-8d86-3ad194622982.png">
 
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img width="765" alt="Screenshot 2023-01-05 at 19 58 21" src="https://user-images.githubusercontent.com/58992981/210848487-920c4440-d8ca-44c8-af0a-800346653c47.png">
 
 
 -----------------------------------------------------------------------------------------------------------------------------------------------------------
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img width="765" alt="Screenshot 2023-01-05 at 19 58 21" src="https://user-images.githubusercontent.com/58992981/210848487-920c4440-d8ca-44c8-af0a-800346653c47.png">
 
-
------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-### Task 1
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/9654d12b-9f95-435a-8b1b-089bf27fab4a)
 
 * learn basic pytorch by inplement CNN on MNIST
 1. first we copy and learn pyturch code from https://medium.com/@nutanbhogendrasharma/pytorch-convolutional-neural-network-with-mnist-dataset-4e8a4265e118
@@ -19,43 +16,35 @@
 and we implement it on the previos code and get success of 100% of the test group
 ![1_3DUs-90altOgaBcVJ9LTGg](https://user-images.githubusercontent.com/58992981/203141001-85860bfd-d0c5-4aaa-bca1-15c8d57c19a2.png)
 -------------
-### Task 2
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/22d35922-05f1-446c-a2f7-f5b79a9e3829)
+
 
 * Implementing an Autoencoder in PyTorch
 1. first we copy and learn pyturch code from https://medium.com/pytorch/implementing-an-autoencoder-in-pytorch-19baa22647d1
 
 The encoder and the decoder are neural networks that build the autoencoder model, as depicted in the following figure:
 
-
-![0_b5eT77a_idC3v3BP](https://user-images.githubusercontent.com/58992981/213869707-c2d390b2-b0a8-4bb8-b9ce-da56740a69fb.png)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;![0_b5eT77a_idC3v3BP](https://user-images.githubusercontent.com/58992981/213869707-c2d390b2-b0a8-4bb8-b9ce-da56740a69fb.png)
 
 
 2. We made a comparison between the TRAIN LOSS vs TEST LOSS for EPOCH 1-100:
 
-![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/0a93f753-8de6-4f0c-a335-ae311b44a723)
-![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/9988ab52-d9ee-4ffc-9297-7cc67b92b010)
+![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/9d52b080-e5a5-4e85-b3d0-601de1ee8588)
+
+![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/cf638862-97a5-4cc7-b534-435d52050f12)
+
+![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/a1c72d84-189d-4702-ae00-f1cd682996d5)
+
+![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/f056b908-4419-4155-82b6-63370fb204f9)
+
+![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/1f5add36-8305-42e1-bba2-8162d7063332)
+
+![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/84e493c6-50bb-4819-abaf-63a6586be3f7)
+
+![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/7e439932-6129-4a75-805f-7ab019811d3b)
 
 
-![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/ccf09d9b-f6f5-49d6-b94a-93a64c249084)
-![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/f70ebf57-3cf8-4d88-b1ab-18597042fff0)
-
-
-![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/1e501e75-1bae-4b1b-9022-b064f8df1e19)
-![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/87f62df6-fb94-4bc1-bdbb-da6a8a842d96)
-
-
-![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/c38d201f-1fbd-42bb-b3c1-649ea290fa81)
-![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/87054344-3f67-4048-adb4-0ab263938dda)
-
-
-
-![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/d66199bd-c616-4ab2-85e5-50ad0dfa4445)
-
-
-![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/30f0b814-d740-4ebe-bc09-b6caa980ab5a)
-![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/cdbb825c-a9b1-4db0-a7ff-5209f5457c4f)
-
-![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/d66199bd-c616-4ab2-85e5-50ad0dfa4445)
 
 3. We made a comparison between the minimum LOSS of each "LATENT SIZE" from the group {2,4,8,16,32} :
   
@@ -87,7 +76,8 @@ For example Latent SIZE is 16 and Number is 2
 <img width="815" alt="Screenshot 2023-01-05 at 20 58 36" src="https://user-images.githubusercontent.com/58992981/210860172-45af5d79-d23c-4f70-9fa3-85356ed55de2.png">
 
 ---
-### Task 3 - vq-vae 2
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/0e790ab3-09e7-4368-93ad-e67a676e87e4)
 
 * learn basic pytorch by inplement CNN on MNIST
 1. first we copy and learn pyturch code from https://medium.com/@nutanbhogendrasharma/pytorch-convolutional-neural-network-with-mnist-dataset-4e8a4265e118
