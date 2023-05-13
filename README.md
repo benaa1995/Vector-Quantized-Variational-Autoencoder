@@ -88,8 +88,41 @@ For example Latent SIZE is 16 and Number is 2
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/0e790ab3-09e7-4368-93ad-e67a676e87e4)
 
-* learn basic pytorch by inplement CNN on MNIST
-1. first we copy and learn pyturch code from https://medium.com/@nutanbhogendrasharma/pytorch-convolutional-neural-network-with-mnist-dataset-4e8a4265e118
-2. we add document to the code and run the code and get success of 99% of the test group
-3. we change the convolition from kernal 5 to 2 convolution of kernal 3 run the code and get success of 95% of the test group 
-4. we serch on the web for cnn with convolution kernal of 3 we found the cnn in
+* implemant vq-vae 2 
+* Stage 1 - reconstruct image
+1. This algorithm get an image X passing X through "bottom encoder" and get the output Z_bottom
+2. Then passing Z_b through "top encoder" and get the output Z_top
+3. Replacing Z_top with the matching code book vectors from the "top code book" and get the output E_top
+4. passing E_top through "top decoder" and get the output dec_top
+5. Adding Z_b + dec_top and replacing them with the matching code book vectors from the "bottom code book" 
+and get the output E_bottom
+6. Adding E_bottom + E_top and passing then through the bottom encoder and getting X_rec
+
+* Stage 2 - generate image 
+1. Convert all the dataset from image X to Z_bottom, Z_top and label (if we have label) using the
+trained "bottom encoder" and "top encoder" from the reconstruction task.
+2. Choose a "pixel cnn" model.
+3. Train pixel_cnn_top with (Z_top, label) from the new dataset
+4. Train pixel_cnn_bottom with (Z_bottom, label) from the new dataset
+5. Generate E_top using our trained pixel_cnn_top
+6. Generate E_bottom conditionally on E_top using our trained pixel_cnn_bottom 
+7. Adding E_top + E_bottom and passing then through the trained "bottom encoder" and getting X_rec as our 
+generate image
+
+
+* train the model
+- Our loss function combine of three parts:
+1. Reconstruct loss - Simple L2 between the original image X end reconstruct imag X_REC
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This loss will propagate the bottom decoder
+then it will skip the code book directly to the encoder because
+code book is not continuous
+2. Encoder loss - subtract Z from E
+3. Code book loss -  subtract E from Z
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+There is more advanced loss for the code book. Its call "moving average", this loss save the average loss for each vector e in the "code book"
+and the average times vector e appear in E. Then calculate the current loss and appearance of each vector e.
+Then adding the total appearance and total loss (with sum decay) and calculate the loss by dived the total loss on the total appearance.  
+
+
+
