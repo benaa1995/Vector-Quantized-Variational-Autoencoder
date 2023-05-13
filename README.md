@@ -66,6 +66,8 @@ The encoder and the decoder are neural networks that build the autoencoder model
 ---
 5. We created a table of type cvs containing all the results of all sections 1 to 4, the link of Latent sizes statistic: https://docs.google.com/spreadsheets/d/1uFwPMJs6VD79z750eAqqNCx-qtuPh9zmGxM_9ECyZoQ/edit#gid=0
 
+---
+
 6. Adding a vector of random values to encoder output in autoencoder:
 * For example Latent SIZE 64
 
