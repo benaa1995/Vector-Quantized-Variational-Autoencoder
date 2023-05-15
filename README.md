@@ -86,8 +86,25 @@ For example Latent SIZE is 16 and Number is 2
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/0e790ab3-09e7-4368-93ad-e67a676e87e4)
 
-* learn basic pytorch by inplement CNN on MNIST
-1. first we copy and learn pyturch code from https://medium.com/@nutanbhogendrasharma/pytorch-convolutional-neural-network-with-mnist-dataset-4e8a4265e118
-2. we add document to the code and run the code and get success of 99% of the test group
-3. we change the convolition from kernal 5 to 2 convolution of kernal 3 run the code and get success of 95% of the test group 
-4. we serch on the web for cnn with convolution kernal of 3 we found the cnn in
+Variational Autoencoder (VAE) is a type of neural network that learns to encode input data into a lower-dimensional representation, called a latent variable, and decode the latent variable back into the original input data. VAEs use a probabilistic approach to training and can generate new data samples similar to the original input data. They have a wide range of applications, including data compression, anomaly detection, and data generation, Beta is a hyperparameter in Variational Autoencoders (VAE) that controls the level of importance given to the regularization term in the loss function. The regularization term encourages the latent variables to follow a prior distribution, typically a Gaussian distribution, and is measured by the Kullback-Leibler (KL) divergence. A higher value of beta places more emphasis on the regularization term, resulting in a more compressed latent space, whereas a lower value of beta places more emphasis on the reconstruction loss and can lead to overfitting.
+
+---
+We implemented the code and performed several experiments:
+![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/96c236e0-7b56-4017-8466-b710a16b5f22)
+
+![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/f463c9fc-a45b-486f-b4e7-f7c81a69bc38)
+
+![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/31872fa7-7b9d-40b9-bc6a-d8097148dd9f)
+
+![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/56f8f3b2-14c3-4967-b596-53ec413457e3)
+
+![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/a362561c-b4e8-41b1-a3aa-a740b0540ac9)
+
+![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/49fbf9d4-bb8e-48cd-90e2-7947f2403cdf)
+
+![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/162eb95a-edbc-48b6-85d1-8f00db0a5da8)
+
+All Variational Autoencoder experiments, which involve encoding and decoding input data into a lower-dimensional latent variable space, have been saved to a file for future reference. In addition, t-SNE analysis, which visualizes the high-dimensional data in a two -dimensional space, has also been saved to the file to facilitate easy comparison and analysis of the results.
+The Link : https://docs.google.com/presentation/d/1QPu-V9ZM8QYiV423T-WDm_yTfunkIeFG/edit#slide=id.p8
+
+
