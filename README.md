@@ -55,8 +55,6 @@ The encoder and the decoder are neural networks that build the autoencoder model
 4. We compared the images created by the networks of each "Latent Size" :
 
 
-![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/e6e3f659-a3e0-4c12-bcaa-f0aea60e2600)
-![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/5860edc9-39c4-4a20-91d7-02c2af91ffc7)
 ![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/e1be3d2b-c9f6-47ae-9fd1-6a16b1ae3a2b)
 
 
