@@ -30,19 +30,19 @@ The encoder and the decoder are neural networks that build the autoencoder model
 ---
 2. We made a comparison between the TRAIN LOSS vs TEST LOSS for EPOCH 1-100:
 
-![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/9d52b080-e5a5-4e85-b3d0-601de1ee8588)
+<img src="https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/9d52b080-e5a5-4e85-b3d0-601de1ee8588" alt="your image" width="800" height="400">
 
-![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/cf638862-97a5-4cc7-b534-435d52050f12)
+<img src="https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/cf638862-97a5-4cc7-b534-435d52050f12" alt="your image" width="800" height="400">
 
-![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/a1c72d84-189d-4702-ae00-f1cd682996d5)
+<img src="https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/a1c72d84-189d-4702-ae00-f1cd682996d5" alt="your image" width="800" height="400">
 
-![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/f056b908-4419-4155-82b6-63370fb204f9)
+<img src="https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/f056b908-4419-4155-82b6-63370fb204f9" alt="your image" width="800" height="400">
 
-![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/1f5add36-8305-42e1-bba2-8162d7063332)
+<img src="https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/1f5add36-8305-42e1-bba2-8162d7063332" alt="your image" width="800" height="400">
 
-![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/84e493c6-50bb-4819-abaf-63a6586be3f7)
+<img src="https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/84e493c6-50bb-4819-abaf-63a6586be3f7" alt="your image" width="800" height="400">
 
-![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/7e439932-6129-4a75-805f-7ab019811d3b)
+<img src="https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/7e439932-6129-4a75-805f-7ab019811d3b" alt="your image" width="800" height="400">
 
 
 ---
