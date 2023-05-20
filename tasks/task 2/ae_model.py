@@ -2,7 +2,7 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-import distributed as dist_fn
+# import distributed as dist_fn
 
 
 class ResBlock(nn.Module):
@@ -24,7 +24,7 @@ class ResBlock(nn.Module):
 
 
 class Encoder(nn.Module):
-    def __init__(self, in_channel, channel, n_res_block, n_res_channel, stride):
+    def __init__(self, in_channel, channel, n_res_block, n_res_channel):
         super().__init__()
 
         blocks = [
@@ -76,12 +76,15 @@ class Encoder(nn.Module):
         self.blocks = nn.Sequential(*blocks)
 
     def forward(self, input):
-        return self.blocks(input)
+        # print("encoder_input = ", input.size())
+        output = self.blocks(input)
+        # print("encoder_output = ", output.size())
+        return output
 
 
 class Decoder(nn.Module):
     def __init__(
-            self, in_channel, out_channel, channel, n_res_block, n_res_channel, stride
+            self, in_channel, out_channel, channel, n_res_block, n_res_channel
     ):
         super().__init__()
 
@@ -139,7 +142,10 @@ class Decoder(nn.Module):
         self.blocks = nn.Sequential(*blocks)
 
     def forward(self, input):
-        return self.blocks(input)
+        # print("decoder_input = ", input.size())
+        output = self.blocks(input)
+        # print("decoder_output = ", output.size())
+        return output
 
 
 class AE(nn.Module):
@@ -155,13 +161,7 @@ class AE(nn.Module):
 
         self.enc = Encoder(in_channel, channel, n_res_block, n_res_channel)
 
-        self.dec = Decoder(
-            embed_dim,
-            in_channel,
-            channel,
-            n_res_block,
-            n_res_channel
-        )
+        self.dec = Decoder(embed_dim, in_channel, channel, n_res_block, n_res_channel)
 
     def forward(self, input):
         enc = self.enc(input)
