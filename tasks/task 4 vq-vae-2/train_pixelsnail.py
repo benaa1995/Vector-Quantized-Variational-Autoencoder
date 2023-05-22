@@ -31,6 +31,7 @@ def train(args, epoch, loader, model, optimizer, scheduler, device):
         if args.hier == 'top':
             target = top
             out, _ = model(top)
+            # print("print(out ",out.size)
 
         elif args.hier == 'bottom':
             bottom = bottom.to(device)
@@ -71,8 +72,8 @@ class PixelTransform:
 if __name__ == '__main__':
     os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:64"
     parser = argparse.ArgumentParser()
-    parser.add_argument('--batch', type=int, default=8)
-    parser.add_argument('--epoch', type=int, default=420)
+    parser.add_argument('--batch', type=int, default=128)
+    parser.add_argument('--epoch', type=int, default=300)
     parser.add_argument('--hier', type=str, default='top')
     parser.add_argument('--lr', type=float, default=3e-4)
     parser.add_argument('--channel', type=int, default=256)
@@ -88,7 +89,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    print(args)
+    print("\n\n--------------------------\n",args,"\n-------------------------------------------")
 
     device = 'cuda'
 
@@ -105,7 +106,7 @@ if __name__ == '__main__':
 
     if args.hier == 'top':
         model = PixelSNAIL(
-            [32, 32],
+            [8, 8],
             512,
             args.channel,
             5,
@@ -118,7 +119,7 @@ if __name__ == '__main__':
 
     elif args.hier == 'bottom':
         model = PixelSNAIL(
-            [64, 64],
+            [16, 16],
             512,
             args.channel,
             5,
@@ -153,5 +154,5 @@ if __name__ == '__main__':
         train(args, i, loader, model, optimizer, scheduler, device)
         torch.save(
             {'model': model.module.state_dict(), 'args': args},
-            f'checkpoint/pixelsnail_{args.hier}_{str(i + 1).zfill(3)}.pt',
+            f'checkpoint/{args.hier}_pixelsnail/pixelsnail_{args.hier}_{str(i + 1).zfill(3)}.pt',
         )

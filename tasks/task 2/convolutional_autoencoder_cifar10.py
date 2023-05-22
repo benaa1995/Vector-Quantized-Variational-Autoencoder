@@ -36,11 +36,13 @@ def load_data(batch_size, resize=128):
     train_transform = transforms.Compose([
         transforms.Resize(resize),
         transforms.ToTensor(),
+        transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5]),
     ])
 
     test_transform = transforms.Compose([
         transforms.Resize(resize),
         transforms.ToTensor(),
+        transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5]),
     ])
 
     train_dataset.transform = train_transform

@@ -36,7 +36,7 @@ def load_model(model, checkpoint, device):
 
     elif model == 'pixelsnail_top':
         model = PixelSNAIL(
-            [32, 32],
+            [8, 8],
             512,
             args.channel,
             5,
@@ -49,7 +49,7 @@ def load_model(model, checkpoint, device):
 
     elif model == 'pixelsnail_bottom':
         model = PixelSNAIL(
-            [64, 64],
+            [16, 16],
             512,
             args.channel,
             5,
@@ -76,33 +76,30 @@ if __name__ == '__main__':
     device = 'cuda'
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--batch', type=int, default=8)
+    parser.add_argument('--batch', type=int, default=64)
     parser.add_argument('--vqvae', type=str)
     parser.add_argument('--top', type=str)
     parser.add_argument('--bottom', type=str)
     parser.add_argument('--temp', type=float, default=1.0)
     parser.add_argument('filename', type=str)
 
-    args = parser.parse_args([""])
-
+    args = parser.parse_args()
+    print(args)
     model_vqvae = load_model('vqvae', args.vqvae, device)
     model_top = load_model('pixelsnail_top', args.top, device)
     model_bottom = load_model('pixelsnail_bottom', args.bottom, device)
 
-    top_sample = sample_model(model_top, device, args.batch, [32, 32], args.temp)
+    top_sample = sample_model(model_top, device, args.batch, [8, 8], args.temp)
     bottom_sample = sample_model(
-        model_bottom, device, args.batch, [64, 64], args.temp, condition=top_sample
+        model_bottom, device, args.batch, [16, 16], args.temp, condition=top_sample
     )
-
+    # print("\n\n----------------------------------------------------------")
+    # print(top_sample)
+    # print("----------------------------------------------------------\n\n")
+    # print("\n\n----------------------------------------------------------")
+    # print(bottom_sample)
+    # print("----------------------------------------------------------\n\n")
     decoded_sample = model_vqvae.decode_code(top_sample, bottom_sample)
     decoded_sample = decoded_sample.clamp(-1, 1)
 
     save_image(decoded_sample, args.filename, normalize=True, range=(-1, 1))
-
-
-# TODO convrt between two image- from the latent --> convert the output of the encoder before the
-#  quentize function
-
-# TODO generat image
-
-# TODO transform latent pixel's (need to think how to do it more clear)

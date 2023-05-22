@@ -193,7 +193,7 @@ def causal_mask(size):
 
 
 class CausalAttention(nn.Module):
-    def __init__(self, query_channel, key_channel, channel, n_head=8, dropout=0.1):
+    def __init__(self, query_channel, key_channel, channel, n_head=4, dropout=0.1):
         super().__init__()
 
         self.query = wn_linear(query_channel, channel)
@@ -207,6 +207,7 @@ class CausalAttention(nn.Module):
 
     def forward(self, query, key):
         batch, _, height, width = key.shape
+        # print("key.shape  ",key.shape)
 
         def reshape(input):
             return input.view(batch, -1, self.n_head, self.dim_head).transpose(1, 2)
@@ -304,7 +305,7 @@ class PixelBlock(nn.Module):
         else:
             bg_cat = torch.cat([out, background], 1)
             out = self.out(bg_cat)
-
+        # print(out.size())
         return out
 
 

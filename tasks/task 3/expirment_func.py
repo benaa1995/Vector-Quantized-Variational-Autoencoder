@@ -55,7 +55,7 @@ def create_random_img(decoder, device, dir_name="random_Z",epoch=-1, num_of_img=
         size = torch.zeros(sample_size)
         p = torch.distributions.Normal(torch.zeros_like(size), torch.ones_like(size))
         random_latent_vec = p.rsample()
-        random_latent_vec.to(device)
+        random_latent_vec = random_latent_vec.to(device)
 
         out = decoder(random_latent_vec)
         torchvision.utils.save_image(

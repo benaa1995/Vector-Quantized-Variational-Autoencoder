@@ -41,11 +41,13 @@ def load_data(batch_size, resize=128, data_dir='dataset'):
     train_transform = transforms.Compose([
         transforms.Resize(resize),
         transforms.ToTensor(),
+        transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5]),
     ])
 
     test_transform = transforms.Compose([
         transforms.Resize(resize),
         transforms.ToTensor(),
+        transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5]),
     ])
 
     train_dataset.transform = train_transform
@@ -258,7 +260,7 @@ if __name__ == '__main__':
     parser.add_argument("--plt_output_dir", type=str, default="random_Z")
     parser.add_argument("--digit_impact_dir", type=str, default="latent_digit_impact")
     parser.add_argument("--convert_img_dir", type=str, default="convert_img_from_latent")
-    parser.add_argument("path", type=str)
+
 
     args = parser.parse_args()
     main(args)

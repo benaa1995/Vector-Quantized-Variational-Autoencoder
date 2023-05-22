@@ -3,7 +3,7 @@ import pickle
 import os
 import torch
 import torchvision
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, random_split
 from torchvision import transforms
 import lmdb
 from tqdm import tqdm
@@ -35,11 +35,45 @@ def extract(lmdb_env, loader, model, device):
 
         txn.put('length'.encode('utf-8'), str(index).encode('utf-8'))
 
+def load_data(batch_size, resize=128, data_dir='dataset'):
+    train_dataset = torchvision.datasets.CIFAR10(data_dir, train=True, download=True)
+    test_dataset = torchvision.datasets.CIFAR10(data_dir, train=False, download=True)
+
+    train_transform = transforms.Compose([
+        transforms.Resize(resize),
+        transforms.ToTensor(),
+        transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5]),
+    ])
+
+    test_transform = transforms.Compose([
+        transforms.Resize(resize),
+        transforms.ToTensor(),
+        transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5]),
+    ])
+
+    train_dataset.transform = train_transform
+    test_dataset.transform = test_transform
+
+    # ------------------------------------------------------------------------
+    # todo remove !!!!!
+    m = len(train_dataset)
+    smaller_train_data, val_data = random_split(train_dataset, [int(m * 0.001), int(m - m * 0.001)])
+    m = len(test_dataset)
+    smaller_test_data, val_data = random_split(test_dataset, [int(m * 0.005), int(m - m * 0.005)])
+    train_loader = torch.utils.data.DataLoader(smaller_train_data, batch_size=batch_size)
+    test_loader = torch.utils.data.DataLoader(smaller_test_data, batch_size=batch_size, shuffle=True)
+    # ---------------------------------------------------------------------------------------------
+    # train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size)
+    # test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
+
+    return train_loader, test_loader, train_dataset, test_dataset
+
+
 
 if __name__ == '__main__':
     os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:64"
     parser = argparse.ArgumentParser()
-    parser.add_argument('--size', type=int, default=256)
+    parser.add_argument('--size', type=int, default=128)
     parser.add_argument('--ckpt', type=str)
     parser.add_argument('--name', type=str)
     parser.add_argument('path', type=str)
@@ -48,47 +82,20 @@ if __name__ == '__main__':
 
     device = 'cuda'
 
+    train_loader, test_loader, train_dataset, test_dataset = load_data(args.size, resize=128, data_dir=args.path)
 
 
 
-    # -----------------------------------
-    # data_dir = 'dataset_CIFAR10_vgg16_bn'
-    #
-    # train_dataset = torchvision.datasets.CIFAR10(args.path, train=True, download=True, transform=transform)
-    # test_dataset = torchvision.datasets.CIFAR10(args.path, train=False, download=True, transform=transform)
-    #
-    # # dataset = datasets.ImageFolder(args.path, transform=transform)
-    # sampler = dist.data_sampler(train_dataset, shuffle=True, distributed=args.distributed)
-    # loader = DataLoader(
-    #     train_dataset, batch_size=128 // args.n_gpu, sampler=sampler, num_workers=2
-    # )
-    # -----------------------
 
 
-    transform = transforms.Compose(
-        [
-            transforms.Resize(args.size),
-            # transforms.CenterCrop(args.size),
-            transforms.ToTensor(),
-            transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5]),
-        ]
-    )
-
-    # dataset = ImageFileDataset(args.path, transform=transform)
-
-    data_dir = 'dataset_CIFAR10_vgg16_bn'
-
-    train_dataset = torchvision.datasets.CIFAR10(args.path, train=True, download=True, transform=transform)
-
-    loader = DataLoader(train_dataset, batch_size=32, shuffle=False, num_workers=4)
 
     model = VQVAE()
     model.load_state_dict(torch.load(args.ckpt))
     model = model.to(device)
     model.eval()
-
+    # TODO change the map size
     map_size = 100 * 1024 * 1024 * 1024
 
     env = lmdb.open(args.name, map_size=map_size)
 
-    extract(env, loader, model, device)
+    extract(env, train_loader, model, device)

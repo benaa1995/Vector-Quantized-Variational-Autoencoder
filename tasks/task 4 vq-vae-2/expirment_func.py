@@ -46,12 +46,11 @@ import halper_func as hf
 #             ax.get_yaxis().set_visible(False)
 #         plt.show()
 
-def create_random_img(decoder, device, dir_name="random_Z",epoch=-1, num_of_img=10, latent_size=(2, 4, 4)):
-
+def create_random_img(decoder, device, dir_name="random_Z", epoch=-1, num_of_img=10, latent_size=(2, 4, 4)):
     # Set evaluation mode for the decoder
     decoder.eval()
     with torch.no_grad():  # No need to track the gradients
-        sample_size = (num_of_img, ) + latent_size
+        sample_size = (num_of_img,) + latent_size
         size = torch.zeros(sample_size)
         p = torch.distributions.Normal(torch.zeros_like(size), torch.ones_like(size))
         random_latent_vec = p.rsample()
@@ -126,10 +125,10 @@ def create_random_img(decoder, device, dir_name="random_Z",epoch=-1, num_of_img=
 #             plt.show()
 
 
-
 # The function take n image and change every digit in ther latent vector to chack what the impcat of
 # every digit in the vector on the image
-def latent_digit_impact(model, device, test_loader, label=0 , dir_name="latent_digit_impact", epoch=-1,
+def latent_digit_impact(model, device, test_loader, codebook_size=512, label=0, dir_name="latent_digit_impact",
+                        epoch=-1,
                         num_of_steps=8):
     model.eval()
     with torch.no_grad():
@@ -137,34 +136,53 @@ def latent_digit_impact(model, device, test_loader, label=0 , dir_name="latent_d
         changed_image_list = []
         # find image by target
         for batch, tar in test_loader:
-            for  i, img in enumerate(batch):
+            for i, img in enumerate(batch):
                 if label == int(tar[i]):
                     tar_image = img
                     break
             if tar_image is not None:
                 break
-        # conver the img from 3D to 4D
+        # convert the img from 3D to 4D
         tar_image = tar_image.unsqueeze(0)
         # save the "Z" of the target image
         tar_image = tar_image.to(device)
-        tar_Z, _, _ = model.enc(tar_image)
-        # convert every coordinate of the "Z" and save the reconstruct X
-        for ch, row, col in product(range(tar_Z.size(1)),range(tar_Z.size(2)),range(tar_Z.size(3))):
-            changed_image_list.append(tar_image)
-            changed_image_list.append(model.dec(tar_Z))
-            temp_vec = tar_Z.detach().clone()
-            for step in range(num_of_steps + 1):
-                # add the offset to the curent cordinate in the original vector
-                temp_vec[0][ch][row][col] = -1 + step * (2 / num_of_steps)
-                changed_image = model.dec(temp_vec)
-                changed_image_list.append(changed_image)
-        torchvision.utils.save_image(
-            torch.cat(changed_image_list, 0),
-            f"sample_vae{os.sep}{dir_name}{os.sep}{str(epoch + 1).zfill(5)}.png",
-            nrow=num_of_steps+3,
-            normalize=True,
-            value_range=(-1, 1),
-        )
+
+        # get the - "Z"
+        _, _, _, code_t, code_b = model.encode(tar_image)
+        quant_level_dict = {"top": code_t, "bottom": code_b}
+        # todo dec = self.decode(quant_t, quant_b)
+        # for every quantized level
+        for i, quant_level in enumerate(["top", "bottom"]):
+            # convert every coordinate of the "Z" and save the reconstruct X
+            # list of the current latent size for th coordinate in the loop
+            curr_quant_size = [quant_level_dict[quant_level].size(1), quant_level_dict[quant_level].size(2)]
+            for row, col in product(range(curr_quant_size[0]), range(curr_quant_size[1])):
+                # append the original image
+                changed_image_list.append(tar_image)
+                # append the reconstruct image
+                changed_image_list.append(model.decode_code(code_t, code_b))
+                # copy the Z
+                temp_code = quant_level_dict[quant_level].detach().clone()
+
+                for step in range(num_of_steps + 1):
+                    # add the offset to the curent cordinate in the original "Z"
+                    temp_code[0][row][col] = (step * ((codebook_size-1) / num_of_steps))//1
+                    code_position = []
+                    if quant_level == "top":
+                        code_position.append(temp_code)
+                        code_position.append(quant_level_dict["bottom"])
+                    else:
+                        code_position.append(quant_level_dict["top"])
+                        code_position.append(temp_code)
+                    changed_image = model.decode_code(code_position[0], code_position[1])
+                    changed_image_list.append(changed_image)
+            torchvision.utils.save_image(
+                torch.cat(changed_image_list, 0),
+                f"experiment_vqvae{os.sep}{dir_name}{os.sep}{quant_level}_{str(epoch + 1).zfill(5)}.png",
+                nrow=num_of_steps + 3,
+                normalize=True,
+                value_range=(-1, 1),
+            )
 
 
 # # The function two image and convert one imag to the second by margin the two latent vector
@@ -210,8 +228,8 @@ def latent_digit_impact(model, device, test_loader, label=0 , dir_name="latent_d
 # with different impact
 def convert_img_from_latent(model, device, test_loader, label_1=0, label_2=1, dir_name="convert_img_from_latent",
                             epoch=-1, num_of_steps=8):
-    origin_image = {"img_1":None,"img_2":None}
-    origin_Z = {"Z_1":None,"Z_2":None}
+    origin_image = {"img_1": None, "img_2": None}
+    origin_Z = {"Z_1": None, "Z_2": None}
     output_list = []
     model.eval()
     # find images by label
@@ -250,14 +268,10 @@ def convert_img_from_latent(model, device, test_loader, label_1=0, label_2=1, di
         torchvision.utils.save_image(
             torch.cat(output_list, 0),
             f"sample_vae{os.sep}{dir_name}{os.sep}{str(epoch + 1).zfill(5)}.png",
-            nrow=num_of_steps+3,
+            nrow=num_of_steps + 3,
             normalize=True,
             value_range=(-1, 1),
         )
-
-
-
-
 
 
 def train_with_TSNE(data_path, num_of_sample=1000):
