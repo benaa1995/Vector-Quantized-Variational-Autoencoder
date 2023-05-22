@@ -1,8 +1,5 @@
 import torch
 from torch import nn
-from torch.nn import functional as F
-
-import distributed as dist_fn
 
 
 class ResBlock(nn.Module):
@@ -24,7 +21,7 @@ class ResBlock(nn.Module):
 
 
 class Encoder(nn.Module):
-    def __init__(self, in_channel, channel, n_res_block, n_res_channel, stride):
+    def __init__(self, in_channel, channel, n_res_block, n_res_channel):
         super().__init__()
 
         blocks = [
@@ -54,7 +51,6 @@ class Encoder(nn.Module):
             # nn.Conv2d(channel, channel, 3, padding=1),
         ]
 
-
         for i in range(n_res_block):
             blocks.append(ResBlock(channel, n_res_channel))
 
@@ -75,14 +71,16 @@ class Encoder(nn.Module):
 
         self.blocks = nn.Sequential(*blocks)
 
-
         self.z_mean = nn.Conv2d(channel // 32, channel // 64, 3, padding=1)
         self.z_log_var = nn.Conv2d(channel // 32, channel // 64, 3, padding=1)
-# TODO fix the matrix size in the "random" function
-# (1,16)
-# (2,8,8)
+
     def reparameterize(self, z_mu, z_log_var):
-        eps = torch.randn(z_mu.size(0), z_mu.size(1)).to(z_mu.get_device())
+        print(f"z_mu.size() = {z_mu.size()}")
+        print(
+            f"z_mu.size(0) = {z_mu.size(0)}, z_mu.size(1) = {z_mu.size(1)}, z_mu.size(2) = {z_mu.size(2)}, z_mu.size(3) = {z_mu.size(3)}")
+        # print(f"z_log_var.get_device() = {z_log_var.get_device()}")
+        device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+        eps = torch.randn(z_mu.size(0), z_mu.size(1), z_mu.size(2), z_mu.size(3)).to(device)
         z = z_mu + eps * torch.exp(z_log_var / 2.)
         return z
 
@@ -93,10 +91,9 @@ class Encoder(nn.Module):
         return encoded_data, z_mean, z_log_var
 
 
-
 class Decoder(nn.Module):
     def __init__(
-            self, in_channel, out_channel, channel, n_res_block, n_res_channel, stride
+            self, in_channel, out_channel, channel, n_res_block, n_res_channel
     ):
         super().__init__()
 
@@ -168,7 +165,7 @@ class VAE(nn.Module):
     ):
         super().__init__()
 
-        self.enc_b = Encoder(in_channel, channel, n_res_block, n_res_channel, stride=6)
+        self.enc = Encoder(in_channel, channel, n_res_block, n_res_channel)
 
         self.dec = Decoder(
             embed_dim,
@@ -179,9 +176,7 @@ class VAE(nn.Module):
         )
 
     def forward(self, input):
-        enc_b = self.enc_b(input)
-        # print("\nenc_b size = ",enc_b.size())
-        rec_input = self.dec(enc_b)
+        enc, z_mean, z_log_var = self.enc(input)
+        rec_input = self.dec(enc)
 
         return rec_input, 1
-

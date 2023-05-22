@@ -50,9 +50,9 @@ def load_data(batch_size, resize=128):
     # ------------------------------------------------------------------------
     # todo remove !!!!!
     m = len(train_dataset)
-    smaller_train_data, val_data = random_split(train_dataset, [int(m * 0.01), int(m - m * 0.01)])
+    smaller_train_data, val_data = random_split(train_dataset, [int(m * 0.001), int(m - m * 0.001)])
     m = len(test_dataset)
-    smaller_test_data, val_data = random_split(test_dataset, [int(m * 0.01), int(m - m * 0.01)])
+    smaller_test_data, val_data = random_split(test_dataset, [int(m * 0.001), int(m - m * 0.001)])
     train_loader = torch.utils.data.DataLoader(smaller_train_data, batch_size=batch_size)
     test_loader = torch.utils.data.DataLoader(smaller_test_data, batch_size=batch_size, shuffle=True)
     # ---------------------------------------------------------------------------------------------
@@ -62,11 +62,11 @@ def load_data(batch_size, resize=128):
     return train_loader, test_loader, train_dataset, test_dataset
 
 
-def load_save_checkpoint(epoch, model=ae_model.AE(), save=True):
+def load_save_checkpoint(epoch, model=ae_model.AE(), save=True,load_path="",save_dir=""):
     if save:
-        torch.save(model.state_dict(), f"checkpoint/ae{str(epoch + 1).zfill(3)}.pt")
+        torch.save(model.state_dict(), f"checkpoint/{save_dir}ae{str(epoch + 1).zfill(3)}.pt")
     else:
-        ckpt = torch.load(os.path.join('checkpoint', f"ae{str(epoch + 1).zfill(3)}.pt"))
+        ckpt = torch.load(os.path.join('checkpoint', load_path))
         model.load_state_dict(ckpt)
         # model = model.to(device)
     return model
@@ -134,7 +134,7 @@ def plot_ae_outputs(model, test_dataset, test_loader, epoch, num_of_img=10):
             device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
             img = img.to(device)
             sample = img[:num_of_img]
-            out ,_= model(sample)
+            out, _ = model(sample)
             torchvision.utils.save_image(
                 torch.cat([sample, out], 0),
                 f"sample_ae/{str(epoch + 1).zfill(5)}_{str(epoch+1).zfill(5)}.png",
@@ -449,6 +449,8 @@ def train_model(lr=0.001, latent_size=4, num_epochs=30):
         writer.flush()
         global_step += 1
 
+        # save the current checkpoint
+        load_save_checkpoint(epoch, model=model)
         # function :
         plot_ae_outputs(model, test_dataset, test_loader, epoch, num_of_img=10)
         '''if epoch%10 == 0:
