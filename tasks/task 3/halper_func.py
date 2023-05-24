@@ -85,7 +85,50 @@ def plot_ae_outputs(model, test_loader, epoch, dir_name, num_of_img=10):
 
 
 # save the latent vector in cvs and train liniar logistic on this model
+# def convert_latent_to_cvs(encoder, latent_size, file_name, dataloader, device):
+#     req_col = {}
+#     X = "X"
+#     for i in range(latent_size):
+#         temp_col = X + str(i + 1)
+#         req_col[temp_col] = []
+#     req_col["Y"] = []
+#
+#     # convert to data frae
+#     df = pd.DataFrame.from_dict(req_col)
+#     encoder.eval()
+#     with torch.no_grad():  # No need to track the gradients
+#         for image_batch, target_batch in dataloader:
+#             # Move tensor to the proper device
+#             image_batch = image_batch.to(device)
+#             curr_batch_size = image_batch.shape
+#             curr_num_of_row = curr_batch_size[0]
+#             # Encode data
+#             encoded_data, _, _ = encoder(image_batch)
+#             encoded_data = encoded_data.to(device).detach().numpy()
+#             target_batch = target_batch.to(device).detach().numpy()
+#             rows = np.zeros((curr_num_of_row, latent_size + 1))
+#             rows[:, :-1] = encoded_data
+#             bach_y = target_batch.reshape((-1, 1))
+#             rows[:, -1:] = bach_y
+#             # add the row to the data frame
+#             for row in rows:
+#                 df.loc[len(df)] = row
+#         print(df)
+#         file_name = file_name + '.cvs'
+#         # save the dataframe as cvs file
+#         df.to_csv(file_name)
+
+
 def convert_latent_to_cvs(encoder, latent_size, file_name, dataloader, device):
+    latent_size = 0
+    # get the latent size
+    for image_batch, target_batch in dataloader:
+        latent, _, _ = encoder(image_batch)
+        latent = torch.flatten(latent[0])
+        latent_size = latent.size()[0]
+        break
+
+
     req_col = {}
     X = "X"
     for i in range(latent_size):
@@ -104,6 +147,7 @@ def convert_latent_to_cvs(encoder, latent_size, file_name, dataloader, device):
             curr_num_of_row = curr_batch_size[0]
             # Encode data
             encoded_data, _, _ = encoder(image_batch)
+            encoded_data = torch.flatten(encoded_data, start_dim=1)
             encoded_data = encoded_data.to(device).detach().numpy()
             target_batch = target_batch.to(device).detach().numpy()
             rows = np.zeros((curr_num_of_row, latent_size + 1))
@@ -117,7 +161,6 @@ def convert_latent_to_cvs(encoder, latent_size, file_name, dataloader, device):
         file_name = file_name + '.cvs'
         # save the dataframe as cvs file
         df.to_csv(file_name)
-
 
 def train_with_log_reg(test_path, train_path):
     # load the data

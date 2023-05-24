@@ -225,10 +225,12 @@ def train_model(VAE, train_loader, test_loader, test_dataset, lr=0.001, latent_s
         # save the current checkpoint
         load_save_checkpoint(epoch, model=VAE)
 
-        hf.plot_ae_outputs(VAE, test_loader, epoch, "cifar10_1", num_of_img=10)
-        ef.create_random_img(VAE.dec, device, epoch=epoch)
-        ef.latent_digit_impact(VAE, device, test_loader, label=2, epoch=epoch)
-        ef.convert_img_from_latent(VAE, device, test_loader, label_1=0, label_2=1, epoch=epoch)
+        hf.convert_latent_to_cvs(VAE.enc, 4, "kkkkk", test_loader, device)
+
+        # hf.plot_ae_outputs(VAE, test_loader, epoch, "cifar10_1", num_of_img=10)
+        # ef.create_random_img(VAE.dec, device, epoch=epoch)
+        # ef.latent_digit_impact(VAE, device, test_loader, label=2, epoch=epoch)
+        # ef.convert_img_from_latent(VAE, device, test_loader, label_1=0, label_2=1, epoch=epoch)
         print("ooops")
 
     writer.add_scalar("latent_size vs minimun loss", min(diz_loss["val_loss"]), latent_size)
@@ -260,7 +262,6 @@ if __name__ == '__main__':
     parser.add_argument("--plt_output_dir", type=str, default="random_Z")
     parser.add_argument("--digit_impact_dir", type=str, default="latent_digit_impact")
     parser.add_argument("--convert_img_dir", type=str, default="convert_img_from_latent")
-
 
     args = parser.parse_args()
     main(args)

@@ -46,24 +46,24 @@ import halper_func as hf
 #             ax.get_yaxis().set_visible(False)
 #         plt.show()
 
-def create_random_img(decoder, device, dir_name="random_Z", epoch=-1, num_of_img=10, latent_size=(2, 4, 4)):
-    # Set evaluation mode for the decoder
-    decoder.eval()
-    with torch.no_grad():  # No need to track the gradients
-        sample_size = (num_of_img,) + latent_size
-        size = torch.zeros(sample_size)
-        p = torch.distributions.Normal(torch.zeros_like(size), torch.ones_like(size))
-        random_latent_vec = p.rsample()
-        random_latent_vec.to(device)
-
-        out = decoder(random_latent_vec)
-        torchvision.utils.save_image(
-            out,
-            f"sample_vae{os.sep}{dir_name}{os.sep}{str(epoch + 1).zfill(5)}.png",
-            nrow=num_of_img,
-            normalize=True,
-            value_range=(-1, 1),
-        )
+# def create_random_img(decoder, device, dir_name="random_Z", epoch=-1, num_of_img=10, latent_size=(2, 4, 4)):
+#     # Set evaluation mode for the decoder
+#     decoder.eval()
+#     with torch.no_grad():  # No need to track the gradients
+#         sample_size = (num_of_img,) + latent_size
+#         size = torch.zeros(sample_size)
+#         p = torch.distributions.Normal(torch.zeros_like(size), torch.ones_like(size))
+#         random_latent_vec = p.rsample()
+#         random_latent_vec.to(device)
+#
+#         out = decoder(random_latent_vec)
+#         torchvision.utils.save_image(
+#             out,
+#             f"sample_vae{os.sep}{dir_name}{os.sep}{str(epoch + 1).zfill(5)}.png",
+#             nrow=num_of_img,
+#             normalize=True,
+#             value_range=(-1, 1),
+#         )
 
 
 # # The function take n image and change every digit in ther latent vector to chack what the impcat of
@@ -176,13 +176,17 @@ def latent_digit_impact(model, device, test_loader, codebook_size=512, label=0, 
                         code_position.append(temp_code)
                     changed_image = model.decode_code(code_position[0], code_position[1])
                     changed_image_list.append(changed_image)
-            torchvision.utils.save_image(
-                torch.cat(changed_image_list, 0),
-                f"experiment_vqvae{os.sep}{dir_name}{os.sep}{quant_level}_{str(epoch + 1).zfill(5)}.png",
-                nrow=num_of_steps + 3,
-                normalize=True,
-                value_range=(-1, 1),
-            )
+            # separate the lis to sub lists
+            max_len = quant_level_dict ["top"].size(1) * quant_level_dict ["top"].size(2)-1
+            sub_list = [changed_image_list[(x)*max_len:(x+1)*max_len] for x in range(len(changed_image_list)//max_len)]
+            for li_num, li in enumerate(sub_list):
+                torchvision.utils.save_image(
+                    torch.cat(li, 0),
+                    f"experiment_vqvae{os.sep}{dir_name}{os.sep}{quant_level}_{str(epoch + 1).zfill(5)}_pixels_{str(li_num*max_len)}-{str((li_num+1)*max_len)}.png",
+                    nrow=num_of_steps + 3,
+                    normalize=True,
+                    value_range=(-1, 1),
+                )
 
 
 # # The function two image and convert one imag to the second by margin the two latent vector
