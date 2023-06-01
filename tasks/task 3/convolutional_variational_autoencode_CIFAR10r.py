@@ -78,8 +78,19 @@ def load_save_checkpoint(epoch, model=vae_model.VAE(), save=True, load_path="", 
     return model
 
 
-def vae_loss(image_batch, decoded_data, loss_fn, z_log_var, z_mean, beta_exp=0):
-    kl_div = -0.5 * torch.sum(1 + z_log_var - z_mean ** 2 - torch.exp(z_log_var), axis=1)  # sum over latent dimension
+def vae_loss(image_batch, decoded_data, loss_fn, z_log_var, z_mean, beta_exp=8):
+    a = torch.randn(4, 4)
+    b = torch.sum(a, 1)
+    c = torch.arange(3* 4 * 5 * 6).view(3, 4, 5, 6)
+    d = torch.ones(3, 4, 5, 6)
+    e = torch.sum(c, (3, 2, 1))
+    f = torch.sum(d, (3, 2, 1))
+
+    pow_log_var = torch.exp(z_log_var)
+    pow_mean = z_mean ** 2
+    kl_1 = 1 + z_log_var - z_mean ** 2 - torch.exp(z_log_var)
+    z_log_var_lv = 1 + z_log_var
+    kl_div = -0.5 * torch.sum(1 + z_log_var - z_mean ** 2 - torch.exp(z_log_var), axis=(3, 2, 1))  # sum over latent dimension
     batchsize = kl_div.size(0)
     kl_div = kl_div.mean()  # average over batch dimension
 
@@ -87,7 +98,9 @@ def vae_loss(image_batch, decoded_data, loss_fn, z_log_var, z_mean, beta_exp=0):
     pixelwise = pixelwise.view(batchsize, -1).sum(axis=1)  # sum over pixels
     pixelwise = pixelwise.mean()  # average over batch dimension
 
+    # beta_exp = 12
     beta = 2 ** beta_exp
+    # kl_div_temp = beta * kl_div
 
     # Evaluate loss
     loss = pixelwise + beta * kl_div
