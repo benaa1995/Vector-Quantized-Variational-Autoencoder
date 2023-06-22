@@ -409,6 +409,7 @@ class PixelSNAIL(nn.Module):
         background = self.background[:, :, :height, :].expand(batch, 2, height, width)
 
         if condition is not None:
+
             if 'condition' in cache:
                 condition = cache['condition']
                 condition = condition[:, :, :height, :]

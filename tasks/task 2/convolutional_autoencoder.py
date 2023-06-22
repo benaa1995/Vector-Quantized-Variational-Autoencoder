@@ -18,7 +18,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.manifold import TSNE
 import seaborn as sns
 
-import ae_model
+import ae_model_ch2_hw8
 
 #writer for tnsorboard
 writer = SummaryWriter(f'runs/MNIST/autoencoder_tensorboard')

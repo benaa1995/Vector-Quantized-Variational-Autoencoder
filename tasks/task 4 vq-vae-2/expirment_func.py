@@ -46,24 +46,24 @@ import halper_func as hf
 #             ax.get_yaxis().set_visible(False)
 #         plt.show()
 
-# def create_random_img(decoder, device, dir_name="random_Z", epoch=-1, num_of_img=10, latent_size=(2, 4, 4)):
-#     # Set evaluation mode for the decoder
-#     decoder.eval()
-#     with torch.no_grad():  # No need to track the gradients
-#         sample_size = (num_of_img,) + latent_size
-#         size = torch.zeros(sample_size)
-#         p = torch.distributions.Normal(torch.zeros_like(size), torch.ones_like(size))
-#         random_latent_vec = p.rsample()
-#         random_latent_vec.to(device)
-#
-#         out = decoder(random_latent_vec)
-#         torchvision.utils.save_image(
-#             out,
-#             f"sample_vae{os.sep}{dir_name}{os.sep}{str(epoch + 1).zfill(5)}.png",
-#             nrow=num_of_img,
-#             normalize=True,
-#             value_range=(-1, 1),
-#         )
+def create_random_img(decoder, device, dir_name="random_Z", epoch=-1, num_of_img=10, latent_size=(2, 4, 4)):
+    # Set evaluation mode for the decoder
+    decoder.eval()
+    with torch.no_grad():  # No need to track the gradients
+        sample_size = (num_of_img,) + latent_size
+        size = torch.zeros(sample_size)
+        p = torch.distributions.Normal(torch.zeros_like(size), torch.ones_like(size))
+        random_latent_vec = p.rsample()
+        random_latent_vec.to(device)
+
+        out = decoder(random_latent_vec)
+        torchvision.utils.save_image(
+            out,
+            f"sample_vae{os.sep}{dir_name}{os.sep}{str(epoch + 1).zfill(5)}.png",
+            nrow=num_of_img,
+            normalize=True,
+            value_range=(-1, 1),
+        )
 
 
 # # The function take n image and change every digit in ther latent vector to chack what the impcat of
@@ -127,9 +127,14 @@ import halper_func as hf
 
 # The function take n image and change every digit in ther latent vector to chack what the impcat of
 # every digit in the vector on the image
-def latent_digit_impact(model, device, test_loader, codebook_size=512, label=0, dir_name="latent_digit_impact",
+
+def latent_digit_impact(model, device, test_loader, codebook_size=512, max_pix_in_file=-1, label=0, dir_name="latent_digit_impact",
                         epoch=-1,
                         num_of_steps=8):
+    # create dir for the current epoch
+    dir_path = f"experiment_vqvae{os.sep}{dir_name}{os.sep}epoch_{str(epoch + 1)}"
+    if not os.path.exists(dir_path):
+        os.mkdir(dir_path)
     model.eval()
     with torch.no_grad():
         tar_image = None
@@ -150,6 +155,17 @@ def latent_digit_impact(model, device, test_loader, codebook_size=512, label=0, 
         # get the - "Z"
         _, _, _, code_t, code_b = model.encode(tar_image)
         quant_level_dict = {"top": code_t, "bottom": code_b}
+        # define max size of each img file
+        top_total_pixel = quant_level_dict["top"].size(1) * quant_level_dict["top"].size(2) - 1
+        if max_pix_in_file == -1:
+            max_pix_in_file = top_total_pixel
+
+        max_img_in_file = max_pix_in_file * (num_of_steps + 2)
+        start_pix = 0
+        end_pix = 0
+
+
+
         # todo dec = self.decode(quant_t, quant_b)
         # for every quantized level
         for i, quant_level in enumerate(["top", "bottom"]):
@@ -159,8 +175,10 @@ def latent_digit_impact(model, device, test_loader, codebook_size=512, label=0, 
             for row, col in product(range(curr_quant_size[0]), range(curr_quant_size[1])):
                 # append the original image
                 changed_image_list.append(tar_image)
+                end_pix += 1
                 # append the reconstruct image
                 changed_image_list.append(model.decode_code(code_t, code_b))
+
                 # copy the Z
                 temp_code = quant_level_dict[quant_level].detach().clone()
 
@@ -176,17 +194,22 @@ def latent_digit_impact(model, device, test_loader, codebook_size=512, label=0, 
                         code_position.append(temp_code)
                     changed_image = model.decode_code(code_position[0], code_position[1])
                     changed_image_list.append(changed_image)
-            # separate the lis to sub lists
-            max_len = quant_level_dict ["top"].size(1) * quant_level_dict ["top"].size(2)-1
-            sub_list = [changed_image_list[(x)*max_len:(x+1)*max_len] for x in range(len(changed_image_list)//max_len)]
-            for li_num, li in enumerate(sub_list):
-                torchvision.utils.save_image(
-                    torch.cat(li, 0),
-                    f"experiment_vqvae{os.sep}{dir_name}{os.sep}{quant_level}_{str(epoch + 1).zfill(5)}_pixels_{str(li_num*max_len)}-{str((li_num+1)*max_len)}.png",
-                    nrow=num_of_steps + 3,
-                    normalize=True,
-                    value_range=(-1, 1),
-                )
+
+                # separate the lis to sub lists
+            # max_pix_in_file = quant_level_dict["top"].size(1) * quant_level_dict["top"].size(2) - 1
+            # sub_list = [changed_image_list[(x) * max_pix_in_file:(x + 1) * max_pix_in_file] for x in
+            #             range(len(changed_image_list) // max_pix_in_file)]
+            # for li_num, li in enumerate(sub_list):
+                if len(changed_image_list) >= max_img_in_file-1:
+                    torchvision.utils.save_image(
+                        torch.cat(changed_image_list, 0),
+                        os.path.join(dir_path, f"{quant_level}_pixels_{str(start_pix)}-{str(end_pix-1)}.png"),
+                        nrow=num_of_steps + 3,
+                        normalize=True,
+                        value_range=(-1, 1),
+                    )
+                    start_pix = end_pix
+                    changed_image_list = []
 
 
 # # The function two image and convert one imag to the second by margin the two latent vector
@@ -231,38 +254,44 @@ def latent_digit_impact(model, device, test_loader, codebook_size=512, label=0, 
 # The function two image and convert one imag to the second by margin the two latent vector
 # with different impact
 def convert_img_from_latent(model, device, test_loader, label_1=0, label_2=1, dir_name="convert_img_from_latent",
-                            epoch=-1, num_of_steps=8):
+                            epoch=-1, num_of_steps=8, codebook_size=32):
     origin_image = {"img_1": None, "img_2": None}
-    origin_Z = {"Z_1": None, "Z_2": None}
+    origin_Z = {"Z_1_b": None, "Z_1_t": None, "Z_2_b": None, "Z_2_t": None}
     output_list = []
     model.eval()
     # find images by label
     with torch.no_grad():
         # find image by target
         for batch, tar in test_loader:
-            for i, img in enumerate(batch):
-                if label_1 == int(tar[i]):
-                    origin_image["img_1"] = img.unsqueeze(0).to(device)
-                if label_2 == int(tar[i]):
-                    origin_image["img_2"] = img.unsqueeze(0).to(device)
-                if origin_image["img_1"] is not None and origin_image["img_2"] is not None:
-                    break
+            if label_1 == int(tar[0]):
+                origin_image["img_1"] = batch.to(device)  # img.unsqueeze(0).to(device)
+            if label_2 == int(tar[0]):
+                origin_image["img_2"] = batch.to(device)
             if origin_image["img_1"] is not None and origin_image["img_2"] is not None:
                 break
         # create the "Z" for each image
-        origin_Z["Z_1"], _, _ = model.enc(origin_image["img_1"])
-        origin_Z["Z_2"], _, _ = model.enc(origin_image["img_2"])
+        _, _, _, origin_Z["Z_1_t"], origin_Z["Z_1_b"] = model.encode(origin_image["img_1"])
+        _, _, _, origin_Z["Z_2_t"], origin_Z["Z_2_b"] = model.encode(origin_image["img_2"])
         # add the first original image to the output list
         output_list.append(origin_image["img_1"])
 
         for step in range(num_of_steps + 1):
-            temp_first_vec = origin_Z["Z_1"].detach().clone()
-            temp_second_vec = origin_Z["Z_2"].detach().clone()
+            temp_first_vec_t = origin_Z["Z_1_t"].detach().clone()
+            temp_first_vec_b = origin_Z["Z_1_b"].detach().clone()
+            temp_second_vec_t = origin_Z["Z_2_t"].detach().clone()
+            temp_second_vec_b = origin_Z["Z_2_b"].detach().clone()
             t = (1 / num_of_steps) * step
             # combine the two image with impact "t" on the first ant "t-1" on the second
-            temp_vec = temp_first_vec * (1 - t) + temp_second_vec * (t)
+            temp_vec_t = temp_first_vec_t * (1 - t) + temp_second_vec_t * (t)
+            temp_vec_b = temp_first_vec_b * (1 - t) + temp_second_vec_b * (t)
+            # keep the number in the codebook range
+            temp_vec_t %= codebook_size
+            temp_vec_b %= codebook_size
+            # convert to int
+            temp_vec_t = temp_vec_t.int()
+            temp_vec_b = temp_vec_b.int()
             # creat the change image by pass the vector throw the decoder
-            changed_image = model.dec(temp_vec)
+            changed_image = model.decode_code(temp_vec_t, temp_vec_b)
             # add the changed image to the output list
             output_list.append(changed_image)
 
@@ -271,7 +300,7 @@ def convert_img_from_latent(model, device, test_loader, label_1=0, label_2=1, di
         # save the images
         torchvision.utils.save_image(
             torch.cat(output_list, 0),
-            f"sample_vae{os.sep}{dir_name}{os.sep}{str(epoch + 1).zfill(5)}.png",
+            f"experiment_vqvae{os.sep}{dir_name}{os.sep}{str(epoch + 1).zfill(5)}.png",
             nrow=num_of_steps + 3,
             normalize=True,
             value_range=(-1, 1),

@@ -7,13 +7,12 @@ import torch
 import torchvision
 from sklearn.linear_model import LogisticRegression
 from torch.utils.data import random_split
-import vae_model
+
 from torchvision import transforms
 
-
-# import seaborn as sns
-
 img_idx_MNIST_adapter = lambda tar, n: {i: np.where(tar == i)[0][0] for i in range(n)}
+
+
 def img_idx_CIFAR10_adapter(targets, n):
     t_idx = {}
     for i in range(n):
@@ -31,47 +30,12 @@ plot_CIFAR10_adapter = lambda img: np.transpose(img, (1, 2, 0))
 targets_MNIST_adapter = lambda test_dataset: test_dataset.targets.numpy()
 
 targets_CIFAR10_adapter = lambda test_dataset: test_dataset.targets
-# def plot_ae_outputs(encoder, decoder, test_dataset, device, targets_adapter, img_idx_adapter, plot_adapter,
-#                     cmap=None, n=10):
-#     plt.figure(figsize=(16, 4.5))
-#     # get index of images from every target's type
-#     targets = targets_adapter(test_dataset)
-#     t_idx = img_idx_adapter(targets, n)
-#     for i in range(n):
-#         ax = plt.subplot(2, n, i + 1)
-#         # get the original image
-#         img = test_dataset[t_idx[i]][0].unsqueeze(0).to(device)
-#         encoder.eval()
-#         decoder.eval()
-#         # get the re-construct image
-#         with torch.no_grad():
-#             encoded_data, _, _ = encoder(img)
-#             rec_img = decoder(encoded_data)
-#         # plot the original image
-#         img = img.cpu()
-#         np_img = img.cpu().squeeze().numpy()
-#         plt.imshow(plot_adapter(np_img), cmap=cmap)
-#         ax.get_xaxis().set_visible(False)
-#         ax.get_yaxis().set_visible(False)
-#         if i == n // 2:
-#             ax.set_title('Original images')
-#         ax = plt.subplot(2, n, i + 1 + n)
-#         # plot the re-construct image
-#         rec_img = rec_img.cpu()
-#         np_rec_img = rec_img.cpu().squeeze().numpy()
-#         plt.imshow(plot_adapter(np_rec_img), cmap=cmap)
-#         ax.get_xaxis().set_visible(False)
-#         ax.get_yaxis().set_visible(False)
-#         if i == n // 2:
-#             ax.set_title('Reconstructed images')
-#     plt.show()
-#
 
 
-def plot_ae_outputs(model, test_loader, epoch, dir_name, num_of_img=10):
+
+def plot_ae_outputs(model, test_dataset, test_loader, epoch, dir_name="plot_ae_outputs", num_of_img=10):
     model.eval()
     with torch.no_grad():
-        out = []
         for img, tar in test_loader:
             device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
             img = img.to(device)
@@ -79,7 +43,7 @@ def plot_ae_outputs(model, test_loader, epoch, dir_name, num_of_img=10):
             out, _ = model(sample)
             torchvision.utils.save_image(
                 torch.cat([sample, out], 0),
-                f"sample_vae{os.sep}{dir_name}{os.sep}{str(epoch + 1).zfill(5)}.png",
+                f"sample_ae{os.sep}{dir_name}{os.sep}{str(epoch + 1).zfill(5)}_{str(epoch+1).zfill(5)}.png",
                 nrow=num_of_img,
                 normalize=True,
                 value_range=(-1, 1),
@@ -152,9 +116,7 @@ def train_with_log_reg(test_path, train_path):
     print("accuracy on test = ", 100 * accuracy_test / len(y_test), "%")
 
 
-
-
-def load_data(batch_size, resize=128, data_dir='dataset'):
+def load_data(batch_size, resize=128, data_dir = 'dataset'):
     train_dataset = torchvision.datasets.CIFAR10(data_dir, train=True, download=True)
     test_dataset = torchvision.datasets.CIFAR10(data_dir, train=False, download=True)
 
@@ -173,12 +135,13 @@ def load_data(batch_size, resize=128, data_dir='dataset'):
     train_dataset.transform = train_transform
     test_dataset.transform = test_transform
 
+
     # # ------------------------------------------------------------------------
-    # # todo_D remove !!!!!
+    # # todo_d remove !!!!!
     # m = len(train_dataset)
     # smaller_train_data, val_data = random_split(train_dataset, [int(m * 0.001), int(m - m * 0.001)])
     # m = len(test_dataset)
-    # smaller_test_data, val_data = random_split(test_dataset, [int(m * 0.005), int(m - m * 0.005)])
+    # smaller_test_data, val_data = random_split(test_dataset, [int(m * 0.001), int(m - m * 0.001)])
     # train_loader = torch.utils.data.DataLoader(smaller_train_data, batch_size=batch_size)
     # test_loader = torch.utils.data.DataLoader(smaller_test_data, batch_size=batch_size, shuffle=True)
     # # ---------------------------------------------------------------------------------------------
@@ -188,9 +151,9 @@ def load_data(batch_size, resize=128, data_dir='dataset'):
     return train_loader, test_loader, train_dataset, test_dataset
 
 
-def load_save_checkpoint(model=vae_model.VAE(), epoch=-1, save=True, load_path="", save_path=""):
+def load_save_checkpoint(model, epoch=-1, save=True, load_path="", save_dir=""):
     if save:
-        torch.save(model.state_dict(), f"checkpoint/{save_path}vae{str(epoch + 1).zfill(3)}.pt")
+        torch.save(model.state_dict(), f"checkpoint/{save_dir}ae{str(epoch + 1).zfill(3)}.pt")
     else:
         ckpt = torch.load(os.path.join('checkpoint', load_path))
         model.load_state_dict(ckpt)

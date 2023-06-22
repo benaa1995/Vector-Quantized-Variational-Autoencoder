@@ -12,45 +12,62 @@ from torchvision import datasets, transforms, utils
 from tqdm import tqdm
 
 from vqvae import VQVAE
+# from vqvae_mnist import VQVAE
 from scheduler import CycleScheduler
 import distributed as dist
 
 
-def load_data(batch_size, resize=128, data_path='dataset'):
-    train_dataset = torchvision.datasets.CIFAR10(data_path, train=True, download=True)
-    test_dataset = torchvision.datasets.CIFAR10(data_path, train=False, download=True)
+def load_data(batch_size, resize=128, data_path='dataset', dataset="MNIST"):
+    if dataset == "MNIST":
+        train_dataset = torchvision.datasets.MNIST(data_path, train=True, download=True)
+        test_dataset = torchvision.datasets.MNIST(data_path, train=False, download=True)
 
-    train_transform = transforms.Compose([
-        transforms.Resize(resize),
-        transforms.ToTensor(),
-        transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5]),
-    ])
+        train_transform = transforms.Compose([
+            transforms.Resize(resize),
+            transforms.ToTensor(),
+            transforms.Normalize([0.5], [0.5]),
+        ])
 
-    test_transform = transforms.Compose([
-        transforms.Resize(resize),
-        transforms.ToTensor(),
-        transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5]),
-    ])
+        test_transform = transforms.Compose([
+            transforms.Resize(resize),
+            transforms.ToTensor(),
+            transforms.Normalize([0.5], [0.5]),
+        ])
+    else:
+        train_dataset = torchvision.datasets.CIFAR10(data_path, train=True, download=True)
+        test_dataset = torchvision.datasets.CIFAR10(data_path, train=False, download=True)
+
+        train_transform = transforms.Compose([
+            transforms.Resize(resize),
+            transforms.ToTensor(),
+            transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5]),
+        ])
+
+        test_transform = transforms.Compose([
+            transforms.Resize(resize),
+            transforms.ToTensor(),
+            transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5]),
+        ])
 
     train_dataset.transform = train_transform
     test_dataset.transform = test_transform
 
-    # ------------------------------------------------------------------------
-    # todo remove !!!!!
-    m = len(train_dataset)
-    smaller_train_data, val_data = random_split(train_dataset, [int(m * 0.001), int(m - m * 0.001)])
-    m = len(test_dataset)
-    smaller_test_data, val_data = random_split(test_dataset, [int(m * 0.005), int(m - m * 0.005)])
-    train_loader = torch.utils.data.DataLoader(smaller_train_data, batch_size=batch_size)
-    test_loader = torch.utils.data.DataLoader(smaller_test_data, batch_size=batch_size, shuffle=True)
-    # ---------------------------------------------------------------------------------------------
-    # train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size)
-    # test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
+    # # ------------------------------------------------------------------------
+    # # todo remove !!!!!
+    # m = len(train_dataset)
+    # smaller_train_data, val_data = random_split(train_dataset, [int(m * 0.001), int(m - m * 0.001)])
+    # m = len(test_dataset)
+    # smaller_test_data, val_data = random_split(test_dataset, [int(m * 0.005), int(m - m * 0.005)])
+    # train_loader = torch.utils.data.DataLoader(smaller_train_data, batch_size=batch_size)
+    # test_loader = torch.utils.data.DataLoader(smaller_test_data, batch_size=batch_size, shuffle=True)
+    # # ---------------------------------------------------------------------------------------------
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size)
+    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
 
     return train_loader, test_loader, train_dataset, test_dataset
 
 
-def train(epoch, loader, model, optimizer, scheduler, device):
+def train(epoch, loader, model, optimizer, scheduler, device, args):
     if dist.is_primary():
         loader = tqdm(loader)
 
@@ -107,7 +124,7 @@ def train(epoch, loader, model, optimizer, scheduler, device):
 
                 utils.save_image(
                     torch.cat([sample, out], 0),
-                    f"sample/vqvae/{str(epoch + 1).zfill(5)}_{str(i).zfill(5)}.png",
+                    f"sample/vqvae{args.plt_dir}/{str(epoch + 1).zfill(5)}_{str(i).zfill(5)}.png",
                     nrow=sample_size,
                     normalize=True,
                     value_range=(-1, 1),
@@ -121,7 +138,7 @@ def main(args):
 
     args.distributed = dist.get_world_size() > 1
 
-    train_loader, test_loader, train_dataset, test_dataset = load_data(args.size, data_path=args.path)
+    train_loader, test_loader, train_dataset, test_dataset = load_data(args.size, data_path=args.path, resize=args.size)
 
 
     # # dataset = datasets.ImageFolder(args.path, transform=transform)
@@ -151,10 +168,10 @@ def main(args):
         )
 
     for i in range(args.epoch):
-        train(i, train_loader, model, optimizer, scheduler, device)
+        train(i, train_loader, model, optimizer, scheduler, device, args)
 
         if dist.is_primary():
-            torch.save(model.state_dict(), f"checkpoint/vqvae/vqvae{str(i + 1).zfill(3)}.pt")
+            torch.save(model.state_dict(), f"checkpoint/vqvae{args.ckp_dir}/vqvae{str(i + 1).zfill(3)}.pt")
 
 
 if __name__ == "__main__":
@@ -170,11 +187,14 @@ if __name__ == "__main__":
     )
     parser.add_argument("--dist_url", default=f"tcp://127.0.0.1:{port}")
 
-    parser.add_argument("--size", type=int, default=128)
+    parser.add_argument("--size", type=int, default=32)
     parser.add_argument("--epoch", type=int, default=300)
     parser.add_argument("--lr", type=float, default=3e-4)
     parser.add_argument("--sched", type=str)
     parser.add_argument("path", type=str)
+
+    parser.add_argument("--ckp_dir", type=str, default="")
+    parser.add_argument("--plt_dir", type=str, default="")
 
     args = parser.parse_args()
 

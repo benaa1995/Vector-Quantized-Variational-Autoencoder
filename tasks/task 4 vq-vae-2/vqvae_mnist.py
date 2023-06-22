@@ -155,16 +155,16 @@ class Encoder(nn.Module):
 
         blocks.append(nn.ReLU(inplace=True))
 
-        if stride == 4 or stride == 2:
-            # 128 ->64
-            blocks.append(nn.Conv2d(channel, channel // 2, 3, padding=1))
-            blocks.append(nn.ReLU(inplace=True))
-            # 64 -> 32
-            blocks.append(nn.Conv2d(channel // 2, channel // 4, 3, padding=1))
-            blocks.append(nn.ReLU(inplace=True))
-            # 32 -> 16
-            blocks.append(nn.Conv2d(channel // 4, channel // 8, 3, padding=1))
-            blocks.append(nn.ReLU(inplace=True))
+        # if stride == 4 or stride == 2:
+        #     # 128 ->64
+        #     blocks.append(nn.Conv2d(channel, channel // 2, 3, padding=1))
+        #     blocks.append(nn.ReLU(inplace=True))
+        #     # 64 -> 32
+        #     blocks.append(nn.Conv2d(channel // 2, channel // 4, 3, padding=1))
+        #     blocks.append(nn.ReLU(inplace=True))
+        #     # 32 -> 16
+        #     blocks.append(nn.Conv2d(channel // 4, channel // 8, 3, padding=1))
+        #     blocks.append(nn.ReLU(inplace=True))
 
         self.blocks = nn.Sequential(*blocks)
 
@@ -182,21 +182,22 @@ class Decoder(nn.Module):
     ):
         super().__init__()
 
-        blocks = []
-        if stride == 4:
-            # 32 -> 16
-            blocks.append(nn.Conv2d(in_channel, channel // 8, 3, padding=1))
-            blocks.append(nn.ReLU(inplace=True))
-        if stride == 2:
-            # 16 -> 16
-            blocks.append(nn.Conv2d(in_channel, channel // 8, 3, padding=1))
-            blocks.append(nn.ReLU(inplace=True))
-        # 16 ->64
-        blocks.append(nn.Conv2d(channel // 8, channel // 2, 3, padding=1))
-        blocks.append(nn.ReLU(inplace=True))
-        # 64 -> 128
-        blocks.append(nn.Conv2d(channel // 2, channel, 3, padding=1))
-        blocks.append(nn.ReLU(inplace=True))
+        blocks = [nn.Conv2d(in_channel, channel, 3, padding=1)]
+        # blocks = []
+        # if stride == 4:
+        #     # 32 -> 16
+        #     blocks.append(nn.Conv2d(in_channel, channel // 8, 3, padding=1))
+        #     blocks.append(nn.ReLU(inplace=True))
+        # if stride == 2:
+        #     # 16 -> 16
+        #     blocks.append(nn.Conv2d(in_channel, channel // 8, 3, padding=1))
+        #     blocks.append(nn.ReLU(inplace=True))
+        # # 16 ->64
+        # blocks.append(nn.Conv2d(channel // 8, channel // 2, 3, padding=1))
+        # blocks.append(nn.ReLU(inplace=True))
+        # # 64 -> 128
+        # blocks.append(nn.Conv2d(channel // 2, channel, 3, padding=1))
+        # blocks.append(nn.ReLU(inplace=True))
 
 
         for i in range(n_res_block):
@@ -204,53 +205,68 @@ class Decoder(nn.Module):
 
         blocks.append(nn.ReLU(inplace=True))
 
+        # if stride == 4:
+        #     blocks.extend(
+        #         [
+        #             # ------------------------------------------------------------------------------------------
+        #             # 128 -> 64
+        #             nn.ConvTranspose2d(channel, channel//2, 4, stride=2, padding=1),
+        #             nn.ReLU(inplace=True),
+        #             # # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        #             # nn.Conv2d(channel * 2, channel * 4, 3, padding=1),
+        #             # nn.ReLU(inplace=True),
+        #             # # # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+        #             # #
+        #             # # nn.Conv2d(channel * 4, channel * 8, 3, padding=1),
+        #             # # nn.ReLU(inplace=True),
+        #             # # nn.ConvTranspose2d(channel * 8, channel * 4, 4, stride=2, padding=1),
+        #             # # nn.ReLU(inplace=True),
+        #             # # # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+        #             #
+        #             # nn.ConvTranspose2d(channel * 4, channel * 2, 4, stride=2, padding=1),
+        #             # nn.ReLU(inplace=True),
+        #             # # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        #             # 64 -> 32
+        #             nn.Conv2d(channel//2, channel//4, 3, padding=1),
+        #             nn.ReLU(inplace=True),
+        #             # ---------------------------------------------------------------------------------------------
+        #             # 32 -> 16
+        #             nn.ConvTranspose2d(channel//4, channel//8, 4, stride=2, padding=1),
+        #             nn.ReLU(inplace=True),
+        #             # 16 -> 3
+        #             nn.ConvTranspose2d(
+        #                 channel // 8, out_channel, 4, stride=2, padding=1
+        #             ),
+        #         ]
+        #     )
+        #
+        # elif stride == 2:
+        #     # 128 -> 64
+        #     blocks.append(nn.Conv2d(channel, channel//2, 3, padding=1))
+        #     blocks.append(nn.ReLU(inplace=True))
+        #     # 64 -> 32
+        #     blocks.append(nn.Conv2d(channel//2, channel//4, 3, padding=1))
+        #     blocks.append(nn.ReLU(inplace=True))
+        #     # 32 -> 16
+        #     blocks.append(
+        #         nn.ConvTranspose2d(channel//4, out_channel, 4, stride=2, padding=1)
+        #     )
+
         if stride == 4:
             blocks.extend(
                 [
-                    # ------------------------------------------------------------------------------------------
-                    # 128 -> 64
-                    nn.ConvTranspose2d(channel, channel//2, 4, stride=2, padding=1),
+                    nn.ConvTranspose2d(channel, channel // 2, 4, stride=2, padding=1),
                     nn.ReLU(inplace=True),
-                    # # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                    # nn.Conv2d(channel * 2, channel * 4, 3, padding=1),
-                    # nn.ReLU(inplace=True),
-                    # # # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-                    # #
-                    # # nn.Conv2d(channel * 4, channel * 8, 3, padding=1),
-                    # # nn.ReLU(inplace=True),
-                    # # nn.ConvTranspose2d(channel * 8, channel * 4, 4, stride=2, padding=1),
-                    # # nn.ReLU(inplace=True),
-                    # # # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-                    #
-                    # nn.ConvTranspose2d(channel * 4, channel * 2, 4, stride=2, padding=1),
-                    # nn.ReLU(inplace=True),
-                    # # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                    # 64 -> 32
-                    nn.Conv2d(channel//2, channel//4, 3, padding=1),
-                    nn.ReLU(inplace=True),
-                    # ---------------------------------------------------------------------------------------------
-                    # 32 -> 16
-                    nn.ConvTranspose2d(channel//4, channel//8, 4, stride=2, padding=1),
-                    nn.ReLU(inplace=True),
-                    # 16 -> 3
                     nn.ConvTranspose2d(
-                        channel // 8, out_channel, 4, stride=2, padding=1
+                        channel // 2, out_channel, 4, stride=2, padding=1
                     ),
                 ]
             )
 
         elif stride == 2:
-            # 128 -> 64
-            blocks.append(nn.Conv2d(channel, channel//2, 3, padding=1))
-            blocks.append(nn.ReLU(inplace=True))
-            # 64 -> 32
-            blocks.append(nn.Conv2d(channel//2, channel//4, 3, padding=1))
-            blocks.append(nn.ReLU(inplace=True))
-            # 32 -> 16
             blocks.append(
-                nn.ConvTranspose2d(channel//4, out_channel, 4, stride=2, padding=1)
+                nn.ConvTranspose2d(channel, out_channel, 4, stride=2, padding=1)
             )
-
 
 
         self.blocks = nn.Sequential(*blocks)
@@ -268,11 +284,12 @@ class VQVAE(nn.Module):
         # in_channel=3,
         in_channel=1,
         channel=128,
-        quantize_t_channel=16,
-        # quantize_t_channel=128,
+        # quantize_t_channel=16,
+        quantize_t_channel=128,
         n_res_block=2,
         n_res_channel=32,
-        embed_dim=16,
+        # embed_dim=16,
+        embed_dim=128,
         # n_embed=512,
         n_embed=32,
         decay=0.99,

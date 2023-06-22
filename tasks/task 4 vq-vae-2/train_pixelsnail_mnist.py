@@ -14,7 +14,7 @@ except ImportError:
     amp = None
 
 from dataset import LMDBDataset
-from pixelsnail import PixelSNAIL
+from pixelsnail_mnist import PixelSNAIL
 from scheduler import CycleScheduler
 
 
@@ -28,13 +28,19 @@ def train(args, epoch, loader, model, optimizer, scheduler, device):
 
         top = top.to(device)
 
+
         if args.hier == 'top':
             target = top
             curr_batch_size = label.size()[0]
             label = torch.reshape(label, (curr_batch_size, 1, 1))
+            # label = torch.reshape(label, (curr_batch_size, 1))
+            # new_label = torch.cat((label, label), 1)
+            # new_label_1 = torch.reshape(new_label, (curr_batch_size, 1,2))
+            # new_label_2 = torch.cat((new_label_1, new_label_1), 1)
             out, _ = model(top, condition=label)
+            # out, _ = model(top, condition=label)
             # out, _ = model(top)
-
+            # print("print(out ",out.size)
 
         elif args.hier == 'bottom':
             bottom = bottom.to(device)
@@ -79,9 +85,9 @@ if __name__ == '__main__':
     parser.add_argument('--epoch', type=int, default=300)
     parser.add_argument('--hier', type=str, default='top')
     parser.add_argument('--lr', type=float, default=3e-4)
-    parser.add_argument('--channel', type=int, default=256)
+    parser.add_argument('--channel', type=int, default=128)
     parser.add_argument('--n_res_block', type=int, default=4)
-    parser.add_argument('--n_res_channel', type=int, default=256)
+    parser.add_argument('--n_res_channel', type=int, default=128)
     parser.add_argument('--n_out_res_block', type=int, default=0)
     parser.add_argument('--n_cond_res_block', type=int, default=3)
     parser.add_argument('--dropout', type=float, default=0.1)
@@ -105,7 +111,7 @@ if __name__ == '__main__':
     )
 
     ckpt = {}
-
+    curr_epoch = args.curr_epoch
     if args.ckpt is not None:
         ckpt = torch.load(args.ckpt)
         args = ckpt['args']
@@ -116,21 +122,24 @@ if __name__ == '__main__':
 
     if args.hier == 'top':
         model = PixelSNAIL(
-            [8, 8],
-            512,
+            [2, 2],
+            32,
             args.channel,
             5,
             4,
             args.n_res_block,
             args.n_res_channel,
+            attention=False,
             dropout=args.dropout,
-            n_out_res_block=args.n_out_res_block,
+            n_cond_res_block=args.n_cond_res_block,
+            cond_res_channel=args.n_res_channel,
+            # n_out_res_block=args.n_out_res_block,
         )
 
     elif args.hier == 'bottom':
         model = PixelSNAIL(
-            [16, 16],
-            512,
+            [4, 4],
+            32,
             args.channel,
             5,
             4,
@@ -163,10 +172,10 @@ if __name__ == '__main__':
         scheduler = CycleScheduler(
             optimizer, args.lr, n_iter=len(loader) * args.epoch, momentum=None
         )
-
-    for i in range(args.curr_epoch, args.epoch):
+    d = range(curr_epoch, args.epoch)
+    for i in range(curr_epoch, args.epoch):
         train(args, i, loader, model, optimizer, scheduler, device)
         torch.save(
             {'model': model.module.state_dict(), 'args': args},
-            f'checkpoint/{args.hier}_pixelsnail/pixelsnail_{args.hier}_{str(i + 1).zfill(3)}.pt',
+            f'checkpoint/{args.hier}_label_cond_pixelsnail_mnist/pixelsnail_{args.hier}_{str(i + 1).zfill(3)}.pt',
         )

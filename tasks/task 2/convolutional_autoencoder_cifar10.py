@@ -22,56 +22,12 @@ from sklearn.manifold import TSNE
 import seaborn as sns
 
 import ae_model
+# import ae_model_ch1 as ae_model
+import expirment_func as ef
+import halper_func as hf
 
 # writer for tnsorboard
 writer = SummaryWriter(f'runs/MNIST/autoencoder_tensorboard')
-
-
-def load_data(batch_size, resize=128):
-    data_dir = 'dataset'
-
-    train_dataset = torchvision.datasets.CIFAR10(data_dir, train=True, download=True)
-    test_dataset = torchvision.datasets.CIFAR10(data_dir, train=False, download=True)
-
-    train_transform = transforms.Compose([
-        transforms.Resize(resize),
-        transforms.ToTensor(),
-        transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5]),
-    ])
-
-    test_transform = transforms.Compose([
-        transforms.Resize(resize),
-        transforms.ToTensor(),
-        transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5]),
-    ])
-
-    train_dataset.transform = train_transform
-    test_dataset.transform = test_transform
-
-    # batch_size = 256
-    # ------------------------------------------------------------------------
-    # todo remove !!!!!
-    m = len(train_dataset)
-    smaller_train_data, val_data = random_split(train_dataset, [int(m * 0.001), int(m - m * 0.001)])
-    m = len(test_dataset)
-    smaller_test_data, val_data = random_split(test_dataset, [int(m * 0.001), int(m - m * 0.001)])
-    train_loader = torch.utils.data.DataLoader(smaller_train_data, batch_size=batch_size)
-    test_loader = torch.utils.data.DataLoader(smaller_test_data, batch_size=batch_size, shuffle=True)
-    # ---------------------------------------------------------------------------------------------
-    # train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size)
-    # test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
-
-    return train_loader, test_loader, train_dataset, test_dataset
-
-
-def load_save_checkpoint(epoch, model=ae_model.AE(), save=True,load_path="",save_dir=""):
-    if save:
-        torch.save(model.state_dict(), f"checkpoint/{save_dir}ae{str(epoch + 1).zfill(3)}.pt")
-    else:
-        ckpt = torch.load(os.path.join('checkpoint', load_path))
-        model.load_state_dict(ckpt)
-        # model = model.to(device)
-    return model
 
 
 ### Training function
@@ -128,54 +84,7 @@ def test_epoch(encoder, decoder, device, dataloader, loss_fn):
     return val_loss.data
 
 
-def plot_ae_outputs(model, test_dataset, test_loader, epoch, num_of_img=10):
-    model.eval()
-    with torch.no_grad():
-        out = []
-        for img, tar in test_loader:
-            device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-            img = img.to(device)
-            sample = img[:num_of_img]
-            out, _ = model(sample)
-            torchvision.utils.save_image(
-                torch.cat([sample, out], 0),
-                f"sample_ae/{str(epoch + 1).zfill(5)}_{str(epoch+1).zfill(5)}.png",
-                nrow=num_of_img,
-                normalize=True,
-                value_range=(-1, 1),
-            )
-            break
 
-
-
-
-
-# def plot_ae_outputs(encoder, decoder, n=10,
-#                     device=torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")):
-#     # device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-#     print("plot_ae_outputs device = ", device)
-#     plt.figure(figsize=(16, 4.5))
-#     targets = test_dataset.targets.numpy()
-#     t_idx = {i: np.where(targets == i)[0][0] for i in range(n)}
-#     for i in range(n):
-#         ax = plt.subplot(2, n, i + 1)
-#         img = test_dataset[t_idx[i]][0].unsqueeze(0).to(device)
-#         encoder.eval()
-#         decoder.eval()
-#         with torch.no_grad():
-#             rec_img = decoder(encoder(img))
-#         plt.imshow(img.cpu().squeeze().numpy(), cmap='gist_gray')
-#         ax.get_xaxis().set_visible(False)
-#         ax.get_yaxis().set_visible(False)
-#         if i == n // 2:
-#             ax.set_title('Original images')
-#         ax = plt.subplot(2, n, i + 1 + n)
-#         plt.imshow(rec_img.cpu().squeeze().numpy(), cmap='gist_gray')
-#         ax.get_xaxis().set_visible(False)
-#         ax.get_yaxis().set_visible(False)
-#         if i == n // 2:
-#             ax.set_title('Reconstructed images')
-#     plt.show()
 
 
 ### task one and two creat image from random latent vectors
@@ -400,162 +309,87 @@ def train_with_TSNE(data_path, num_of_sample=1000):
     plt.show()
 
 
-def train_model(lr=0.001, latent_size=4, num_epochs=30):
-    train_loader, test_loader, train_dataset, test_dataset = load_data(batch_size=128)
-
-    ### Define the loss function
-    loss_fn = torch.nn.MSELoss()
-
-    ### Define an optimizer (both for the encoder and the decoder!)
-    # lr= 0.001
-    print("lr = ", lr)
-    ### Set the random seed for reproducible results
-    torch.manual_seed(0)
-
-    ### Initialize the two networks
-    # latent_size = 4
-    print("latent_size = ", latent_size)
-    # model = Autoencoder(encoded_space_dim=encoded_space_dim)
-    model = ae_model.AE()
-    params_to_optimize = [
-        {'params': model.enc.parameters()},
-        {'params': model.dec.parameters()}
-    ]
-
-    optim = torch.optim.Adam(params_to_optimize, lr=lr, weight_decay=1e-05)
-
-    # Check if the GPU is available
-    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-    print(f'Selected device: {device}')
-
-    # Move both the encoder and the decoder to the selected device
-    model.to(device)
-
+def train_model(model, device, loss_function, train_loader, test_loader, test_dataset, optim, num_epochs=30):
     # tensorBoard hyper-parameters
     global_step = 1
-    # num_epochs = 30
     diz_loss = {'train_loss': [], 'val_loss': []}
     for epoch in range(num_epochs):
-        # train_loss = train_epoch(encoder, decoder, device,
-        #                          train_loader, loss_fn, optim)
-        # val_loss = test_epoch(encoder, decoder, device, test_loader, loss_fn)
-
-        train_loss = train_epoch(model.enc, model.dec, device,
-                                 train_loader, loss_fn, optim)
-        val_loss = test_epoch(model.enc, model.dec, device, test_loader, loss_fn)
+        train_loss = train_epoch(model.enc, model.dec, device, train_loader, loss_function, optim)
+        val_loss = test_epoch(model.enc, model.dec, device, test_loader, loss_function)
         print('\n EPOCH {}/{} \t train loss {} \t val loss {}'.format(epoch + 1, num_epochs, train_loss, val_loss))
         diz_loss['train_loss'].append(train_loss)
         diz_loss['val_loss'].append(val_loss)
-        temp_name = "Loss, latent size_" + str(latent_size)
+        temp_name = "Loss, latent size_" + str("lat_size")
         writer.add_scalars(temp_name, {'Traning loss': train_loss, 'Test loss': val_loss}, global_step)
         writer.flush()
         global_step += 1
 
         # save the current checkpoint
-        load_save_checkpoint(epoch, model=model)
+        hf.load_save_checkpoint(model, epoch=epoch)
         # function :
-        plot_ae_outputs(model, test_dataset, test_loader, epoch, num_of_img=10)
-        '''if epoch%10 == 0:
-        plot_ae_outputs(encoder,decoder,n=10,device)'''
-    writer.add_scalar("latent size vs minimun loss", min(diz_loss["val_loss"]), latent_size)
+        hf.plot_ae_outputs(model, test_dataset, test_loader, epoch, num_of_img=10)
+        # ef.create_random_img(model.dec, device, epoch=epoch, latent_size=(16, 16, 16))
+        # ef.create_random_img(model.dec, device, epoch=epoch, latent_size=(1, 16, 16))
+        # ef.latent_digit_impact(model, device, test_loader, max_pix_in_file=16*8,epoch=epoch)
+        ef.convert_img_from_latent(model, device, test_loader, label_1=0, label_2=1, epoch=epoch)
+
+
+    writer.add_scalar("latent size vs minimun loss", min(diz_loss["val_loss"]), 1)
     writer.flush()
-    # plot_ae_outputs(encoder, decoder, n=10, device=device)
-    # create_img(decoder,n=4)
-    # create_random_img(decoder, 10, latent_size)
-    # test_file_name = 'test_lat_size_' + str(latent_size)
-    # convert_latent_to_cvs(encoder, latent_size, test_file_name, test_loader, test_dataset, device)
-    # train_file_name = 'train_lat_size_' + str(latent_size)
-    # convert_latent_to_cvs(encoder, latent_size, train_file_name, train_loader, train_dataset, device)
-    # latent_digit_impact(encoder, decoder, n=8, latent_size=4, num_of_steps=8, device=device)
-    # convert_img_from_latent(encoder, decoder, n=10, latent_size=latent_size, num_of_steps=8, device=device)
+
     return diz_loss["val_loss"], diz_loss['train_loss']
 
 
-def latent_size_stat():
-    NUM_OF_EPOCH = 100
-    STEP_SIZE = 0.25
-    NUM_OF_STEPS = 8
-    MAX_POW = 7
-
-    ###compare the loss between the train vs test to avoid over fitting
-    # creat the cvs colons
-    req_col = {'Latent vector size': []}
-    epoch = "Epoch"
-    for i in range(NUM_OF_EPOCH):
-        temp_col = epoch + " " + str(i + 1)
-        req_col[temp_col] = []
-    req_col["Best epoch"] = []
-    req_col["Best loss"] = []
-    # convert to data frae
-    df = pd.DataFrame.from_dict(req_col)
-    # print(df)
-    # get the train and test loss for every "2 pow" latent size
-    for pow in range(MAX_POW):
-        lat_size = int(np.power(2, pow + 1))
-        test_loss, train_loss = train_model(latent_size=lat_size, num_epochs=NUM_OF_EPOCH)
-
-        # add the test loss to data frame
-        row = test_loss
-        for i in range(len(row)):
-            row[i] = row[i].item()
-        row.insert(0, int(lat_size))
-        for i in range(2):
-            row.append(None)
-        # print("new row = ",row)
-        df.loc[len(df)] = row
-        print(df)
-
-    # find the nim test loss and his epooch and add them to the dataframe
-    for i in df.index:
-        temp = df.iloc[[i], 1: NUM_OF_EPOCH + 1].values
-        print(temp)
-        index = np.argmin(temp[0])
-        df.iloc[[i], [NUM_OF_EPOCH + 1]] = index + 1
-        df.iloc[[i], [NUM_OF_EPOCH + 2]] = temp[0][index]
-        print("epoch = ", index + 1, ", min = ", temp[0][index])
-    print(df)
-    # save the dataframe as cvs file
-    df.to_csv('statistic of latent size and epoch.csv')
 
 
-# train_model(latent_size = 16,num_epochs=100)
-# # latent_size_stat()
-# #train_model(num_epochs=5)
-# train_with_TSNE('test_lat_size_2.cvs', 'train_lat_size_2.cvs')
-# train_with_TSNE('test_lat_size_4.cvs', 'train_lat_size_4.cvs')
-# train_with_TSNE('test_lat_size_8.cvs', 'train_lat_size_8.cvs')
-# train_with_TSNE('test_lat_size_16.cvs', 'train_lat_size_16.cvs')
-# train_with_TSNE('test_lat_size_32.cvs', 'train_lat_size_32.cvs')
-# train_with_TSNE('test_lat_size_64.cvs', 'train_lat_size_64.cvs')
-# train_with_TSNE('test_lat_size_128.cvs', 'train_lat_size_128.cvs')
+def main(args):
+    # Check if the GPU is available
+    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+    print(f'Selected device: {device}')
+    # load the dataset
+    train_loader, test_loader, train_dataset, test_dataset = hf.load_data(batch_size=args.batch_size, resize=args.size)
+    # load the model
+    model = ae_model.AE().to(device)
+    if args.load_checkpoint_path is not None:
+        model = hf.load_save_checkpoint(model, save=None, load_path=args.load_checkpoint_path)
 
 
-# def main(args):
-#
-#     train_loader, test_loader, train_dataset, test_dataset = load_data(batch_size=args.batch_size)
-#     model = AE().to(device)
-#
-#     pass
-def get_random_z(min_val=-1, max_val=1, channel=2, row=4, col=4):
-    range_size = max_val - min_val
-    rand = range_size * torch.rand(channel, row, col) + min_val
-    return rand
+    ### Define the loss function
+    loss_function = torch.nn.MSELoss()
+
+
+    ### Set the random seed for reproducible results
+    torch.manual_seed(0)
+
+    ### Initialize the two networks
+    params_to_optimize = [
+        {'params': model.enc.parameters()},
+        {'params': model.dec.parameters()}
+    ]
+
+    # define the optimizer
+    optim = torch.optim.Adam(params_to_optimize, lr=args.lr, weight_decay=1e-05)
+
+    # Move both the encoder and the decoder to the selected device
+    model.to(device)
+
+    # train the model
+    train_model(model, device, loss_function, train_loader, test_loader, test_dataset, optim, num_epochs=args.epoch)
+
+    ef.latent_digit_impact(model, device, test_loader, max_pix_in_file=16*8, epoch=args.epoch-1)
+
+
 
 
 if __name__ == '__main__':
-    rand = get_random_z()
-    # print(rand)
-    # print(rand.size())
 
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--batch_size", type=int, default=128)
     parser.add_argument("--size", type=int, default=128)
-    parser.add_argument("--epoch", type=int, default=560)
+    parser.add_argument("--epoch", type=int, default=300)
     parser.add_argument("--lr", type=float, default=3e-4)
-    parser.add_argument("--sched", type=str)
-    # parser.add_argument("path", type=str)
+    parser.add_argument("--load_checkpoint_path", type=str, default=None)
 
     args = parser.parse_args()
-
-    train_model()
+    main(args)

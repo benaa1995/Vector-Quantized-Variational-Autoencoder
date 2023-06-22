@@ -46,7 +46,7 @@ import halper_func as hf
 #             ax.get_yaxis().set_visible(False)
 #         plt.show()
 
-def create_random_img(decoder, device, dir_name="random_Z",epoch=-1, num_of_img=10, latent_size=(2, 4, 4)):
+def create_random_img(decoder, device, dir_name="random_Z_1",epoch=-1, num_of_img=10, latent_size=(2, 4, 4)):
 
     # Set evaluation mode for the decoder
     decoder.eval()
@@ -60,7 +60,7 @@ def create_random_img(decoder, device, dir_name="random_Z",epoch=-1, num_of_img=
         out = decoder(random_latent_vec)
         torchvision.utils.save_image(
             out,
-            f"sample_vae{os.sep}{dir_name}{os.sep}{str(epoch + 1).zfill(5)}.png",
+            f"experiment_vae{os.sep}{dir_name}{os.sep}{str(epoch + 1).zfill(5)}.png",
             nrow=num_of_img,
             normalize=True,
             value_range=(-1, 1),
@@ -129,8 +129,17 @@ def create_random_img(decoder, device, dir_name="random_Z",epoch=-1, num_of_img=
 
 # The function take n image and change every digit in ther latent vector to chack what the impcat of
 # every digit in the vector on the image
-def latent_digit_impact(model, device, test_loader, label=0 , dir_name="latent_digit_impact", epoch=-1,
+def latent_digit_impact(model, device, test_loader, label=0, max_pix_in_file=-1, dir_name="latent_digit_impact", epoch=-1,
                         num_of_steps=8):
+    # create dir for the current epoch
+    dir_path = f"experiment_vae{os.sep}{dir_name}{os.sep}epoch_{str(epoch + 1)}"
+    if not os.path.exists(dir_path):
+        os.mkdir(dir_path)
+
+    max_img_in_file = max_pix_in_file * (num_of_steps + 2)
+    start_pix = 0
+    end_pix = 0
+
     model.eval()
     with torch.no_grad():
         tar_image = None
@@ -150,21 +159,29 @@ def latent_digit_impact(model, device, test_loader, label=0 , dir_name="latent_d
         tar_Z, _, _ = model.enc(tar_image)
         # convert every coordinate of the "Z" and save the reconstruct X
         for ch, row, col in product(range(tar_Z.size(1)),range(tar_Z.size(2)),range(tar_Z.size(3))):
+            # append the original image
             changed_image_list.append(tar_image)
+            end_pix += 1
+            # append the reconstruct image
             changed_image_list.append(model.dec(tar_Z))
+
             temp_vec = tar_Z.detach().clone()
+
             for step in range(num_of_steps + 1):
                 # add the offset to the curent cordinate in the original vector
                 temp_vec[0][ch][row][col] = -1 + step * (2 / num_of_steps)
                 changed_image = model.dec(temp_vec)
                 changed_image_list.append(changed_image)
-        torchvision.utils.save_image(
-            torch.cat(changed_image_list, 0),
-            f"sample_vae{os.sep}{dir_name}{os.sep}{str(epoch + 1).zfill(5)}.png",
-            nrow=num_of_steps+3,
-            normalize=True,
-            value_range=(-1, 1),
-        )
+            if len(changed_image_list) >= max_img_in_file - 1:
+                torchvision.utils.save_image(
+                    torch.cat(changed_image_list, 0),
+                    os.path.join(dir_path, f"pixels_{str(start_pix)}-{str(end_pix-1)}.png"),
+                    nrow=num_of_steps+3,
+                    normalize=True,
+                    value_range=(-1, 1),
+                )
+                start_pix = end_pix
+                changed_image_list = []
 
 
 # # The function two image and convert one imag to the second by margin the two latent vector
@@ -249,7 +266,7 @@ def convert_img_from_latent(model, device, test_loader, label_1=0, label_2=1, di
         # save the images
         torchvision.utils.save_image(
             torch.cat(output_list, 0),
-            f"sample_vae{os.sep}{dir_name}{os.sep}{str(epoch + 1).zfill(5)}.png",
+            f"experiment_vae{os.sep}{dir_name}{os.sep}{str(epoch + 1).zfill(5)}.png",
             nrow=num_of_steps+3,
             normalize=True,
             value_range=(-1, 1),

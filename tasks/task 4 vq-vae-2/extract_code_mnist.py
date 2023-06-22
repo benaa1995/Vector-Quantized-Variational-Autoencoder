@@ -36,19 +36,19 @@ def extract(lmdb_env, loader, model, device):
         txn.put('length'.encode('utf-8'), str(index).encode('utf-8'))
 
 def load_data(batch_size, resize=128, data_dir='dataset'):
-    train_dataset = torchvision.datasets.CIFAR10(data_dir, train=True, download=True)
-    test_dataset = torchvision.datasets.CIFAR10(data_dir, train=False, download=True)
+    train_dataset = torchvision.datasets.MNIST(data_dir, train=True, download=True)
+    test_dataset = torchvision.datasets.MNIST(data_dir, train=False, download=True)
 
     train_transform = transforms.Compose([
         transforms.Resize(resize),
         transforms.ToTensor(),
-        transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5]),
+        transforms.Normalize([0.5], [0.5]),
     ])
 
     test_transform = transforms.Compose([
         transforms.Resize(resize),
         transforms.ToTensor(),
-        transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5]),
+        transforms.Normalize([0.5], [0.5]),
     ])
 
     train_dataset.transform = train_transform
@@ -73,7 +73,7 @@ def load_data(batch_size, resize=128, data_dir='dataset'):
 if __name__ == '__main__':
     os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:64"
     parser = argparse.ArgumentParser()
-    parser.add_argument('--size', type=int, default=128)
+    parser.add_argument('--size', type=int, default=32)
     parser.add_argument('--ckpt', type=str)
     parser.add_argument('--name', type=str)
     parser.add_argument('path', type=str)
@@ -82,7 +82,7 @@ if __name__ == '__main__':
 
     device = 'cuda'
 
-    train_loader, test_loader, train_dataset, test_dataset = load_data(args.size, resize=128, data_dir=args.path)
+    train_loader, test_loader, train_dataset, test_dataset = load_data(args.size, resize=32, data_dir=args.path)
 
 
 

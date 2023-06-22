@@ -45,17 +45,17 @@ class Encoder(nn.Module):
         super().__init__()
 
         blocks = [
-            # 3 -> 16
+            # 3 -> 8
             nn.Conv2d(in_channel, channel // 8, 4, stride=2, padding=1),
             nn.ReLU(inplace=True),
-            # 16 -> 32
+            # 8 -> 16
             nn.Conv2d(channel // 8, channel // 4, 4, stride=2, padding=1),
             nn.ReLU(inplace=True),
-            # 32 -> 64
+            # 16 -> 32
             nn.Conv2d(channel // 4, channel // 2, 4, stride=2, padding=1),
             nn.ReLU(inplace=True),
             # channel  -->  channel * 2
-            # 64 -> 128
+            # 32 -> 64
             nn.Conv2d(channel // 2, channel, 3, padding=1),
         ]
 
@@ -64,14 +64,20 @@ class Encoder(nn.Module):
 
         blocks.append(nn.ReLU(inplace=True))
 
-        # channels - 128 ->64
+        # 64 ->32
         blocks.append(nn.Conv2d(channel, channel // 2, 3, padding=1))
         blocks.append(nn.ReLU(inplace=True))
-        # channels - 64 -> 32
+        # 32 -> 16
         blocks.append(nn.Conv2d(channel // 2, channel // 4, 3, padding=1))
         blocks.append(nn.ReLU(inplace=True))
-        # channels - 32 -> 16
+        # 16 -> 8
         blocks.append(nn.Conv2d(channel // 4, channel // 8, 3, padding=1))
+        blocks.append(nn.ReLU(inplace=True))
+        # 8 -> 4
+        blocks.append(nn.Conv2d(channel // 8, channel // 16, 3, padding=1))
+        blocks.append(nn.ReLU(inplace=True))
+        # 4 -> 1
+        blocks.append(nn.Conv2d(channel // 16, 1, 3, padding=1))
         blocks.append(nn.ReLU(inplace=True))
 
         self.blocks = nn.Sequential(*blocks)
@@ -90,18 +96,17 @@ class Decoder(nn.Module):
         super().__init__()
 
         blocks = []
-        # if stride == 4:
-        #     # 32 -> 16
-        #     blocks.append(nn.Conv2d(in_channel, channel // 8, 3, padding=1))
-        #     blocks.append(nn.ReLU(inplace=True))
 
-        # 16 -> 16
-        blocks.append(nn.Conv2d(in_channel, channel // 8, 3, padding=1))
+        # 1 -> 4
+        blocks.append(nn.Conv2d(in_channel, channel // 16, 3, padding=1))
         blocks.append(nn.ReLU(inplace=True))
-        # 16 ->64
+        # 4 -> 8
+        blocks.append(nn.Conv2d(channel // 16, channel // 8, 3, padding=1))
+        blocks.append(nn.ReLU(inplace=True))
+        # 8 ->32
         blocks.append(nn.Conv2d(channel // 8, channel // 2, 3, padding=1))
         blocks.append(nn.ReLU(inplace=True))
-        # 64 -> 128
+        # 32 -> 64
         blocks.append(nn.Conv2d(channel // 2, channel, 3, padding=1))
         blocks.append(nn.ReLU(inplace=True))
 
@@ -112,16 +117,16 @@ class Decoder(nn.Module):
 
         blocks.extend(
             [
-                # 128 -> 64
+                # 64 -> 32
                 nn.ConvTranspose2d(channel, channel // 2, 4, stride=2, padding=1),
                 nn.ReLU(inplace=True),
-                # 64 -> 32
+                # 32 -> 16
                 nn.Conv2d(channel // 2, channel // 4, 3, padding=1),
                 nn.ReLU(inplace=True),
-                # 32 -> 16
+                # 16 -> 8
                 nn.ConvTranspose2d(channel // 4, channel // 8, 4, stride=2, padding=1),
                 nn.ReLU(inplace=True),
-                # 16 -> 3
+                # 8 -> 3
                 nn.ConvTranspose2d(channel // 8, out_channel, 4, stride=2, padding=1),
             ]
         )
@@ -139,10 +144,10 @@ class AE(nn.Module):
     def __init__(
             self,
             in_channel=3,
-            channel=128,
+            channel=64,
             n_res_block=2,
             n_res_channel=32,
-            embed_dim=16,
+            embed_dim=1,
     ):
         super().__init__()
 
