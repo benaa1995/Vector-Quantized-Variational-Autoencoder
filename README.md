@@ -5,6 +5,46 @@
 
 -----------------------------------------------------------------------------------------------------------------------------------------------------------
 
+![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/c2681fd8-7337-4b16-9d6a-4825acde4ebd)
+This project compares three algorithms that are all built on the basis of the first algorithm and they are Autoencoder - which is a compression algorithm consisting of two parts - Encoder - the part that compresses and Decoder - the part that extracts. The next two algorithms also consist of these parts. The second is the Variational Autoencoder - the difference between it and the AE is that the VAE makes sure that the compressed information - Z is all distributed in a standard normal way. The third is Vector Quantized Variational Autoencoder, the difference between it and VAE and AE is that VQ-VAE makes sure that the compressed information is all distributed discretely and not continuously.
+The project compares the methods using four tests.
+
+The first method is AE-Autoencoder:
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img width="625" alt="image" src="https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/fd3213aa-7d0b-4a30-a614-9101b987a26b">
+
+
+Autoencoder is an algorithm that uses deep learning and automatically compresses and decodes information - in our project the information is images.
+Autoencoder consists of two parts, the first part is called "encoder" (Encoder) its input is an image - X and the output - Z. The encoder compresses the image-X from a representation by a matrix of size (C,W,H) to a representation by a vector \ matrix-Z, so that Z is smaller (significantly) than the original size of the image.
+The second part is called "Decoder" its input is image - Z and output - X. Its function is to decode Z back to the original image, the restoration of the original image is marked with X.
+
+---
+
+The second method is VAE-Variational Autoencoder:
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img width="625" alt="image" src="https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/7f5fcc0d-74e7-482c-b138-512117e8033f">
+
+
+The algorithm is almost the same as AE except that this algorithm tries to improve the distribution of Z in space and make the Z space that creates meaningful images have a standard normal distribution so that if we draw Z numbers in a standard normal distribution and pass the Z we drew in Decoder we will get a meaningful image.
+
+
+---
+
+The third method is VQ-VAE - Vector Quantized Variational Autoencoder:
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img width="625" alt="image" src="https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/683662b3-a0c4-4abe-8541-5f669c829616">
+
+
+The VQ-VAE algorithm tries to improve VAE and prevent the loss of its features (caused by the approximation of the distribution) and it offers an alternative to the continuous distribution of Z in the VAE algorithm with a discrete distribution in VQ-VAE
+
+
+---
+
+
+
+
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/9654d12b-9f95-435a-8b1b-089bf27fab4a)
 
 * learn basic pytorch by inplement CNN on MNIST
