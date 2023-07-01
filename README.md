@@ -45,7 +45,8 @@ The VQ-VAE algorithm tries to improve VAE and prevent the loss of its features (
 
 
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/9654d12b-9f95-435a-8b1b-089bf27fab4a)
+![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/86eff79e-be30-48f3-a723-8f39032aa7b5)
+
 
 * learn basic pytorch by inplement CNN on MNIST
 1. first we copy and learn pyturch code from https://medium.com/@nutanbhogendrasharma/pytorch-convolutional-neural-network-with-mnist-dataset-4e8a4265e118
@@ -57,15 +58,13 @@ and we implement it on the previos code and get success of 100% of the test grou
 ![1_3DUs-90altOgaBcVJ9LTGg](https://user-images.githubusercontent.com/58992981/203141001-85860bfd-d0c5-4aaa-bca1-15c8d57c19a2.png)
 -------------
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/22d35922-05f1-446c-a2f7-f5b79a9e3829)
+![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/e0a9d3ce-af4c-4a24-b643-2614d4796c0f)
+
 
 
 * Implementing an Autoencoder in PyTorch
 1. first we copy and learn pyturch code from https://medium.com/pytorch/implementing-an-autoencoder-in-pytorch-19baa22647d1
 
-The encoder and the decoder are neural networks that build the autoencoder model, as depicted in the following figure:
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;![0_b5eT77a_idC3v3BP](https://user-images.githubusercontent.com/58992981/213869707-c2d390b2-b0a8-4bb8-b9ce-da56740a69fb.png)
 
 ---
 2. We made a comparison between the TRAIN LOSS vs TEST LOSS for EPOCH 1-100:
@@ -126,7 +125,8 @@ For example Latent SIZE is 16 and Number is 2
 
 ---
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/0e790ab3-09e7-4368-93ad-e67a676e87e4)
+![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/83aeb8dc-c634-480b-844c-cfa5c22781ce)
+
 
 
 * implemant vq-vae 2 
@@ -164,3 +164,77 @@ code book is not continuous
 There is more advanced loss for the code book. Its call "moving average", this loss save the average loss for each vector e in the "code book"
 and the average times vector e appear in E. Then calculate the current loss and appearance of each vector e.
 Then adding the total appearance and total loss (with sum decay) and calculate the loss by dived the total loss on the total appearance.  
+
+---
+
+![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/2e979770-4d4b-4c99-ae4b-bbd616d0c397)
+
+
+
+
+
+After we finished implementing all the methods and ran all the tests and experiments on them, we started comparing the methods
+
+We implemented all the algorithms, trained them on MNIST, and ran our four experiments on them.
+
+
+
+MNIST:
+
+
+![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/1e1f2315-19a8-4585-b43c-17d2ce2026bf)
+
+
+image reconstruction:
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img width="625" alt="image" src="https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/e342b80d-3748-4f31-90e2-5c5ae3a177d7">
+
+Conclusions of the experiment:
+You can see that the (X) of the VAE algorithm comes out as fuzzy as we expected, because of the approximation it makes to make Z normally distributed.
+The AE algorithm manages to extract (X) in a better way and the (X) of VQ-VAE comes out much better, even what AE and even look better than the original, you can see that in the image of the zero it corrects the sharpness of a digit and in the image of the 8 it is. Arranges the closure of the book in the upper right part.
+
+
+
+---
+
+changing coordinates in Z and checking the effect of the change on the image:
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img width="625" alt="image" src="https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/9ae8ef91-f1de-47ea-b7b6-5ea176b96021">
+
+
+
+Conclusions of the experiment:
+You can see that in VAE the coordinate we memorized here (the fourth coordinate) changes the brightness of the digit and from a very dark image with low values ​​we arrive at a very bright image with the high values.
+In VAE, the coordinate we have memorized here (the fifth coordinate) changes the direction of the number and causes the number to lean to the right and its alignment as the values ​​increase.
+In VQ-AE the coordinate we memorized here (the seventh coordinate) changes the top line in the image - its position and its length and you can see here that the vector in this position affects a very specific feature in a very specific part of the image and not on the entire image or object.
+
+
+---
+
+
+Linear transformation between 2 images:
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img width="625" alt="image" src="https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/e03720b1-65fe-4686-b043-51d692a96866">
+
+
+Conclusions of the experiment:
+The AE algorithm during the transition combines the two images, neither passing through junk values ​​nor through other images
+The VAE algorithm goes through other images during the transition
+The VQ-VAE algorithm passes through other images and through garbage values, something we have not seen even in AE and this shows that the distribution of the VQ-VAE is different from AE and a change of vectors causes a sharp change in the entire image.
+
+
+---
+
+Success percentages in classifying the Zs using a classification algorithm:
+
+The AE algorithm reaches a 93% success rate in the Z classification according to the labeling of the original image.
+
+The VAE algorithm reaches 87.5% success rate in the Z classification according to the labeling of the original image.
+
+The VQ-VAE algorithm reaches 81% success rate in the Z classification according to the labeling of the original image.
+
+---
+
+
+
