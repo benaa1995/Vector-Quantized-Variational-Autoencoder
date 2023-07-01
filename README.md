@@ -236,5 +236,33 @@ The VQ-VAE algorithm reaches 81% success rate in the Z classification according 
 
 ---
 
+Generoot images on MNIST and now we will also add CIFAR10:
+
+
+![image](https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/d61666ee-9fae-4738-898f-877c258ce70e)
+
+
+---
+Lottery of Z's and image generator by the computer:
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img width="625" alt="image" src="https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/ae2ee559-6f0a-438e-8399-01f6394050c5">
+
+
+Conclusions of the experiment:
+Here the differences are very significant, you can clearly see that AE's genroot outputs garbage values
+The VAE genroot outputs values ​​that are meaningful but very fuzzy
+And the genroot of VQ-VAE outputs images in very good quality and also according to labeling.
+
+---
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img width="625" alt="image" src="https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/81daafc2-e63a-4648-a75c-20877f84b3e3">
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img width="625" alt="image" src="https://github.com/benaa1995/Vector-Quantized-Variational-Autoencoder/assets/58992981/5885eef6-2905-4c89-85d4-af9848719fa4">
+
+
+Conclusions of the experiment:
+You can see that when we get to the genrot of color images with more complex objects than the numbers, the genrot of AE generates completely random pixels, the VAE generator is very blurry and since we generate images of 32 x 32 it seems at first glance to be garbage values But if you look at the reconstruction of VAE you clearly see that the genroot is very similar to the reconstruction but there is almost no chance to understand what objects are in the images.
+On the other hand, the VQ-VAE generator gives impressive results in relation to the previous algorithms and in relation to the fact that the data on which the algorithm is trained is low-resolution data with pre-blurred images. Indeed it is possible to understand what object we see in the picture, not always clearly but definitely possible.
 
 
